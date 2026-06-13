@@ -8,7 +8,7 @@ interface DataToolbarProps {
 }
 
 export function DataToolbar({ thinkers }: DataToolbarProps) {
-  const { notes, setNote } = useAppContext();
+  const { notes, setNote, addCustomThinker } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
@@ -21,12 +21,22 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
     if (!file) return;
     setImporting(true);
     try {
-      const { notes: imported, count, errors } = await importAllMarkdown(file);
+      const { notes: imported, newThinkers, noteCount, thinkerCount, errors } =
+        await importAllMarkdown(file);
+
       for (const [id, content] of Object.entries(imported)) {
         setNote(id, content as string);
       }
-      let msg = `已导入 ${count} 条笔记`;
-      if (errors.length > 0) msg += `，${errors.length} 个失败`;
+
+      for (const thinker of newThinkers) {
+        addCustomThinker(thinker);
+      }
+
+      const parts: string[] = [];
+      if (noteCount > 0) parts.push(`${noteCount} 条笔记`);
+      if (thinkerCount > 0) parts.push(`${thinkerCount} 位哲学家`);
+      let msg = parts.length > 0 ? `已导入 ${parts.join('、')}` : '未发现新数据';
+      if (errors.length > 0) msg += `（${errors.length} 个文件跳过）`;
       alert(msg);
     } catch {
       alert('导入失败，请检查文件格式');
@@ -46,24 +56,24 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
     }}>
       <span
         onClick={handleExport}
-        title="导出数据备份 (.zip)"
+        title="下载所有数据为 Markdown 文件 (.zip)"
         style={{
           color: '#556677', cursor: 'pointer', fontSize: 11,
           marginRight: 12, userSelect: 'none',
         }}
       >
-        ⬇ 备份
+        ⬇ 下载
       </span>
       <span
         onClick={() => !importing && fileInputRef.current?.click()}
-        title="从备份恢复"
+        title="上传 .md 或 .zip 文件（新增哲学家 / 恢复笔记）"
         style={{
           color: importing ? '#334455' : '#556677',
           cursor: importing ? 'default' : 'pointer',
           fontSize: 11, userSelect: 'none',
         }}
       >
-        {importing ? '...' : '⬆ 恢复'}
+        {importing ? '...' : '⬆ 上传'}
       </span>
       <input
         ref={fileInputRef}

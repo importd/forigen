@@ -145,6 +145,38 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
   return { metadata, note };
 }
 
+/** Convert parsed frontmatter metadata to a Thinker object */
+function metadataToThinker(metadata: Record<string, any>): Thinker | null {
+  if (!metadata.id || !metadata.name) return null;
+
+  const keyWorks = (metadata.key_works || []).map((w: any) => ({
+    title: w.title || '',
+    title_zh: w.title_zh || '',
+    year: w.year || 0,
+  }));
+
+  const coreIdeas = (metadata.core_ideas || []).map((i: any) =>
+    typeof i === 'string' ? i : i.slug || ''
+  ).filter(Boolean);
+
+  return {
+    id: String(metadata.id),
+    name: String(metadata.name),
+    name_zh: String(metadata.name_zh || metadata.name),
+    born: Number(metadata.born) || 0,
+    died: Number(metadata.died) || 0,
+    latitude: Number(metadata.latitude) || 0,
+    longitude: Number(metadata.longitude) || 0,
+    region: String(metadata.region || ''),
+    school: String(metadata.school || ''),
+    keyWorks,
+    influencedBy: Array.isArray(metadata.influenced_by) ? metadata.influenced_by : [],
+    influenced: Array.isArray(metadata.influenced) ? metadata.influenced : [],
+    coreIdeas,
+    hasNotes: false,
+  };
+}
+
 /**
  * Export all thinkers + notes as a zip of Markdown files.
  */
@@ -171,16 +203,25 @@ export async function exportAllMarkdown(
 }
 
 /**
- * Import a zip file of Markdown files and restore notes.
+ * Import a zip file of Markdown files.
+ * Returns notes to restore AND new thinkers to add.
  */
 export async function importAllMarkdown(
   file: File
-): Promise<{ notes: Record<string, string>; count: number; errors: string[] }> {
+): Promise<{
+  notes: Record<string, string>;
+  newThinkers: Thinker[];
+  noteCount: number;
+  thinkerCount: number;
+  errors: string[];
+}> {
   const zip = new JSZip();
   const loaded = await zip.loadAsync(file);
   const notes: Record<string, string> = {};
+  const newThinkers: Thinker[] = [];
   const errors: string[] = [];
-  let count = 0;
+  let noteCount = 0;
+  let thinkerCount = 0;
 
   const entries = Object.entries(loaded.files).filter(
     ([name]) => name.endsWith('.md')
@@ -200,12 +241,21 @@ export async function importAllMarkdown(
 
       if (note) {
         notes[thinkerId] = note;
-        count++;
+        noteCount++;
+      }
+
+      // Try to extract thinker metadata from frontmatter
+      if (result.metadata.id && result.metadata.name) {
+        const thinker = metadataToThinker(result.metadata);
+        if (thinker) {
+          newThinkers.push(thinker);
+          thinkerCount++;
+        }
       }
     } catch {
       errors.push(`${filename}: read error`);
     }
   }
 
-  return { notes, count, errors };
+  return { notes, newThinkers, noteCount, thinkerCount, errors };
 }
