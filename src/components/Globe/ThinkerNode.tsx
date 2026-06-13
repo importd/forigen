@@ -6,9 +6,9 @@ import type { Thinker } from '../../types';
 import { SCHOOL_COLORS } from '../../data/schools';
 import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
 
-const REF_DISTANCE = 4.0;   // reference camera distance (default view)
-const MIN_SCALE = 0.35;     // smallest scale at closest zoom
-const MAX_SCALE = 2.2;      // largest scale at farthest zoom
+const REF_DISTANCE = 4.0;
+const MIN_SCALE = 0.35;
+const MAX_SCALE = 2.2;
 
 interface ThinkerNodeProps {
   thinker: Thinker;
@@ -19,34 +19,40 @@ interface ThinkerNodeProps {
 export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const { camera } = useThree();
 
   const position = latLngToVector3(thinker.latitude, thinker.longitude, GLOBE_RADIUS);
   const color = SCHOOL_COLORS[thinker.school] || '#4fc3f7';
 
-  // Local-space sizes (before group scaling)
   const coreRadius = 0.025 + (thinker.influenced.length * 0.003);
   const innerGlowRadius = coreRadius * 2.2;
   const outerGlowRadius = coreRadius * 3.8;
 
-  // Disable raycasting on glow meshes so they don't block clicks on the core
   const noRaycast = useCallback((el: any) => {
     if (el) el.raycast = () => {};
   }, []);
 
-  // Inverse zoom scaling: bigger when far (see continents), smaller when near (distinguish countries)
+  // Dynamic scaling: nodes and labels grow when far, shrink when near
   useFrame(() => {
     if (!groupRef.current) return;
     const worldPos = new THREE.Vector3();
     groupRef.current.getWorldPosition(worldPos);
     const dist = camera.position.distanceTo(worldPos);
     const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, dist / REF_DISTANCE));
+
+    // Scale the 3D group (node + glows)
     groupRef.current.scale.setScalar(scale);
+
+    // Scale the HTML label proportionally
+    if (labelRef.current) {
+      labelRef.current.style.transform = `scale(${scale})`;
+    }
   });
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Outer glow — no raycast, decorative only */}
+      {/* Outer glow — no raycast */}
       <mesh ref={noRaycast}>
         <sphereGeometry args={[hovered ? outerGlowRadius * 1.4 : outerGlowRadius, 32, 32]} />
         <meshBasicMaterial
@@ -57,7 +63,7 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
         />
       </mesh>
 
-      {/* Inner glow — no raycast, decorative only */}
+      {/* Inner glow — no raycast */}
       <mesh ref={noRaycast}>
         <sphereGeometry args={[innerGlowRadius, 24, 24]} />
         <meshBasicMaterial
@@ -68,7 +74,7 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
         />
       </mesh>
 
-      {/* Core clickable sphere — ONLY this receives pointer events */}
+      {/* Core clickable sphere */}
       <mesh
         onClick={(e) => {
           e.stopPropagation();
@@ -88,23 +94,25 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
         />
       </mesh>
 
-      {/* Hover label — screen-space, positioned above the node */}
+      {/* Hover label — screen-space HTML with dynamic scale matching the node */}
       {hovered && (
         <Html
-          position={[0, coreRadius * 3.5, 0]}
-          distanceFactor={7}
+          position={[0, coreRadius * 4.0, 0]}
           center
           style={{ pointerEvents: 'none' }}
         >
-          <div style={{
-            color: '#fff',
-            fontSize: '11px',
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-            textShadow: '0 0 10px rgba(0,0,0,0.9)',
-            lineHeight: 1.3,
-            pointerEvents: 'none',
-          }}>
+          <div
+            ref={labelRef}
+            style={{
+              color: '#fff',
+              fontSize: '10px',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              textShadow: '0 0 10px rgba(0,0,0,0.9)',
+              lineHeight: 1.3,
+              pointerEvents: 'none',
+            }}
+          >
             <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{thinker.name_zh}</div>
             <div style={{ color: '#aaccdd', fontSize: '10px' }}>
               {thinker.name} · {thinker.born}–{thinker.died}
