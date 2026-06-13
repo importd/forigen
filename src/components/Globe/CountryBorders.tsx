@@ -8,7 +8,7 @@ interface CountryBordersProps {
   dataUrl?: string;
 }
 
-export function CountryBorders({ dataUrl = '/data/countries.geojson' }: CountryBordersProps) {
+export function CountryBorders({ dataUrl = import.meta.env.BASE_URL + 'data/countries.geojson' }: CountryBordersProps) {
   const [geojson, setGeojson] = useState<any>(null);
 
   useEffect(() => {

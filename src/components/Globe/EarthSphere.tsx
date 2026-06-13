@@ -5,7 +5,7 @@ import { GLOBE_RADIUS } from '../../utils/geo';
 
 export function EarthSphere() {
   const meshRef = useRef<THREE.Mesh>(null);
-  const earthTexture = useTexture('/textures/earth.jpg');
+  const earthTexture = useTexture(import.meta.env.BASE_URL + 'textures/earth.jpg');
 
   return (
     <group>
