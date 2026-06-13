@@ -21,7 +21,11 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
   const allRegionLabels = { ...REGION_LABELS, ...customLabels.regions };
   const allIdeaLabels = { ...IDEA_LABELS, ...customLabels.ideas };
 
-  const color = SCHOOL_COLORS[thinker.school] || '#4fc3f7';
+  const mergedColors = { ...SCHOOL_COLORS };
+  for (const [slug, entry] of Object.entries(customLabels.schools)) {
+    if (entry.color) mergedColors[slug] = entry.color;
+  }
+  const color = mergedColors[thinker.school] || '#4fc3f7';
   const school = allSchoolLabels[thinker.school];
   const region = allRegionLabels[thinker.region];
 
@@ -144,7 +148,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
           {thinker.influencedBy.map((id) => {
             const t = getThinkerById(id);
             if (!t) return null;
-            const tColor = SCHOOL_COLORS[t.school] || '#4fc3f7';
+            const tColor = mergedColors[t.school] || '#4fc3f7';
             return (
               <div
                 key={id}
@@ -180,7 +184,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
           {thinker.influenced.map((id) => {
             const t = getThinkerById(id);
             if (!t) return null;
-            const tColor = SCHOOL_COLORS[t.school] || '#4fc3f7';
+            const tColor = mergedColors[t.school] || '#4fc3f7';
             return (
               <div
                 key={id}

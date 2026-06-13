@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import type { Thinker } from '../types';
-import { SCHOOL_LABELS } from '../data/schools';
+import { SCHOOL_LABELS, getSchoolColor } from '../data/schools';
 import { REGION_LABELS, IDEA_LABELS } from '../data/labels';
 
 /**
@@ -27,6 +27,7 @@ function thinkerToMarkdown(thinker: Thinker, note: string): string {
     `school: "${thinker.school}"`,
     `school_label: "${school?.zh || ''}"`,
     `school_label_en: "${school?.en || ''}"`,
+    `school_color: "${getSchoolColor(thinker.school)}"`,
     `key_works:`,
     ...thinker.keyWorks.map(
       (w) => `  - title: "${w.title}"\n    title_zh: "${w.title_zh}"\n    year: ${w.year}`
@@ -206,22 +207,23 @@ export async function exportAllMarkdown(
  * Extract custom labels from parsed frontmatter metadata.
  */
 function extractLabels(metadata: Record<string, any>): {
-  schools: Record<string, { en: string; zh: string }>;
+  schools: Record<string, { en: string; zh: string; color?: string }>;
   regions: Record<string, { en: string; zh: string }>;
   ideas: Record<string, { en: string; zh: string }>;
 } {
   const result = {
-    schools: {} as Record<string, { en: string; zh: string }>,
+    schools: {} as Record<string, { en: string; zh: string; color?: string }>,
     regions: {} as Record<string, { en: string; zh: string }>,
     ideas: {} as Record<string, { en: string; zh: string }>,
   };
 
-  // School label
+  // School label (with optional color)
   const schoolSlug = metadata.school;
   if (schoolSlug && (metadata.school_label || metadata.school_label_en)) {
     result.schools[schoolSlug] = {
       zh: metadata.school_label || schoolSlug,
       en: metadata.school_label_en || schoolSlug,
+      color: metadata.school_color || undefined,
     };
   }
 
@@ -306,14 +308,14 @@ export async function importAllMarkdown(
 ): Promise<{
   notes: Record<string, string>;
   newThinkers: Thinker[];
-  labels: { schools: Record<string, { en: string; zh: string }>; regions: Record<string, { en: string; zh: string }>; ideas: Record<string, { en: string; zh: string }> };
+  labels: { schools: Record<string, { en: string; zh: string; color?: string }>; regions: Record<string, { en: string; zh: string }>; ideas: Record<string, { en: string; zh: string }> };
   noteCount: number;
   thinkerCount: number;
   errors: string[];
 }> {
   const notes: Record<string, string> = {};
   const newThinkers: Thinker[] = [];
-  const labels = { schools: {} as Record<string, { en: string; zh: string }>, regions: {} as Record<string, { en: string; zh: string }>, ideas: {} as Record<string, { en: string; zh: string }> };
+  const labels = { schools: {} as Record<string, { en: string; zh: string; color?: string }>, regions: {} as Record<string, { en: string; zh: string }>, ideas: {} as Record<string, { en: string; zh: string }> };
   const errors: string[] = [];
   let noteCount = 0;
   let thinkerCount = 0;

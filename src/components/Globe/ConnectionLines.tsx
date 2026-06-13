@@ -1,29 +1,42 @@
 import { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Connection } from '../../types';
-import { SCHOOL_COLORS } from '../../data/schools';
+import { getSchoolColor } from '../../data/schools';
 import { latLngToVector3, midPoint, GLOBE_RADIUS } from '../../utils/geo';
+
+const BASE_OPACITY = 0.78;
+const FADE_NEAR = 3.0;   // camera distance where lines become fully visible
+const FADE_FAR = 6.5;    // camera distance where lines fully disappear
 
 interface ConnectionLinesProps {
   connections: Connection[];
 }
 
-/** Animated dashed arc — dash offset slides along the curve to show influence direction. */
+/** Animated dashed arc — dash offset slides along the curve, opacity fades with zoom. */
 function FlowArc({ curve, color }: {
   curve: THREE.QuadraticBezierCurve3;
   color: string;
 }) {
   const lineRef = useRef<any>(null);
   const points = useMemo(() => curve.getPoints(60), [curve]);
+  const { camera } = useThree();
 
   useFrame((_, delta) => {
     if (!lineRef.current) return;
     const mat = lineRef.current.material;
-    if (mat && mat.uniforms && mat.uniforms.dashOffset) {
+    if (!mat) return;
+
+    // Animate dash offset for flow direction
+    if (mat.uniforms?.dashOffset) {
       mat.uniforms.dashOffset.value -= delta * 0.08;
     }
+
+    // Fade lines based on zoom: visible when close, hidden when far
+    const dist = camera.position.length();
+    const zoom = (dist - FADE_NEAR) / (FADE_FAR - FADE_NEAR);
+    mat.opacity = BASE_OPACITY * (1 - Math.max(0, Math.min(1, zoom)));
   });
 
   return (
@@ -36,7 +49,7 @@ function FlowArc({ curve, color }: {
       dashSize={0.03}
       gapSize={0.02}
       transparent
-      opacity={0.6}
+      opacity={BASE_OPACITY}
       depthWrite={false}
     />
   );
@@ -52,7 +65,7 @@ export function ConnectionLines({ connections }: ConnectionLinesProps) {
       return {
         id: conn.id,
         curve,
-        color: SCHOOL_COLORS[conn.school] || '#4fc3f7',
+        color: getSchoolColor(conn.school),
       };
     });
   }, [connections]);

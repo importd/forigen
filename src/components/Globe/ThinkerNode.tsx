@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Thinker } from '../../types';
-import { SCHOOL_COLORS } from '../../data/schools';
+import { getSchoolColor } from '../../data/schools';
 import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
 
 const REF_DISTANCE = 4.0;
@@ -25,7 +25,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerN
   const { camera } = useThree();
 
   const position = latLngToVector3(thinker.latitude, thinker.longitude, GLOBE_RADIUS);
-  const color = SCHOOL_COLORS[thinker.school] || '#4fc3f7';
+  const color = getSchoolColor(thinker.school);
 
   const coreRadius = 0.025 + (thinker.influenced.length * 0.003);
   const innerGlowRadius = coreRadius * 2.2;

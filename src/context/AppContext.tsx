@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import type { Thinker } from '../types';
+import { autoSchoolColor } from '../data/schools';
 
 const NOTES_KEY = 'forigen-notes';
 const CUSTOM_KEY = 'forigen-custom-thinkers';
@@ -23,6 +24,7 @@ function saveJSON(key: string, data: any) {
 export interface LabelEntry {
   en: string;
   zh: string;
+  color?: string;  // optional school color from MD frontmatter
 }
 
 export interface CustomLabels {
@@ -84,8 +86,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const mergeLabels = useCallback((incoming: CustomLabels) => {
     setCustomLabels((prev) => {
+      const mergedSchools = { ...prev.schools };
+      for (const [slug, entry] of Object.entries(incoming.schools)) {
+        mergedSchools[slug] = {
+          ...prev.schools[slug],
+          ...entry,
+          // Keep existing color, or use incoming color, or auto-assign
+          color: prev.schools[slug]?.color || entry.color || autoSchoolColor(slug),
+        };
+      }
       const next: CustomLabels = {
-        schools: { ...prev.schools, ...incoming.schools },
+        schools: mergedSchools,
         regions: { ...prev.regions, ...incoming.regions },
         ideas: { ...prev.ideas, ...incoming.ideas },
       };
