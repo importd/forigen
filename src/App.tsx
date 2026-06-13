@@ -41,8 +41,8 @@ function AppContent() {
         hasNote={hasNote}
       />
 
-      {/* Export/Import toolbar */}
-      <DataToolbar />
+      {/* Data export/import */}
+      <DataToolbar thinkers={allThinkers} />
 
       {/* Search Bar */}
       <SearchBar

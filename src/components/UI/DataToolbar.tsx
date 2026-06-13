@@ -1,50 +1,44 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
+import type { Thinker } from '../../types';
+import { exportAllMarkdown, importAllMarkdown } from '../../utils/markdownIO';
 
-export function DataToolbar() {
+interface DataToolbarProps {
+  thinkers: Thinker[];
+}
+
+export function DataToolbar({ thinkers }: DataToolbarProps) {
   const { notes, setNote } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
 
-  const handleExport = () => {
-    const data = JSON.stringify(notes, null, 2);
-    const blob = new Blob([data], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const date = new Date().toISOString().slice(0, 10);
-    a.download = `forigen-notes-${date}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    await exportAllMarkdown(thinkers, notes);
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      try {
-        const data = JSON.parse(ev.target?.result as string);
-        if (typeof data !== 'object' || Array.isArray(data)) {
-          alert('格式错误：需要 JSON 对象');
-          return;
-        }
-        let count = 0;
-        for (const [id, content] of Object.entries(data)) {
-          if (typeof content === 'string' && content.trim()) {
-            setNote(id, content as string);
-            count++;
-          }
-        }
-        alert(`已导入 ${count} 条笔记 · Imported ${count} notes`);
-      } catch {
-        alert('文件解析失败，请检查 JSON 格式');
-      }
-    };
-    reader.readAsText(file);
+    setImporting(true);
+    try {
+      const { notes: imported, count, errors } = await importAllMarkdown(file);
 
-    // Reset so the same file can be re-imported
-    e.target.value = '';
+      for (const [id, content] of Object.entries(imported)) {
+        setNote(id, content as string);
+      }
+
+      let msg = `已导入 ${count} 条笔记 · Imported ${count} notes`;
+      if (errors.length > 0) {
+        msg += `\n\n${errors.length} 个文件解析失败：\n${errors.slice(0, 5).join('\n')}`;
+      }
+      alert(msg);
+    } catch {
+      alert('导入失败，请检查文件格式。支持 .zip（导出格式）或 .md 文件');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
   };
 
   const noteCount = Object.values(notes).filter(v => v.trim()).length;
@@ -60,12 +54,12 @@ export function DataToolbar() {
       zIndex: 20,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }}>
-      <span style={{ fontSize: 10, color: '#556677' }}>
+      <span style={{ fontSize: 10, color: '#556677', minWidth: 50, textAlign: 'right' }}>
         {noteCount} 条笔记
       </span>
       <button
         onClick={handleExport}
-        title="导出所有笔记"
+        title="导出所有思想家数据和笔记为 Markdown 文件 (zip)"
         style={{
           background: '#1a2a3d',
           border: '1px solid #2a5078',
@@ -76,27 +70,28 @@ export function DataToolbar() {
           padding: '4px 10px',
         }}
       >
-        ⬇ 导出
+        ⬇ 导出 .md
       </button>
       <button
         onClick={() => fileInputRef.current?.click()}
-        title="从文件导入笔记"
+        disabled={importing}
+        title="从 .zip 或 .md 文件导入笔记"
         style={{
           background: '#1a2a3d',
           border: '1px solid #2a5078',
           borderRadius: 4,
-          color: '#aaccdd',
-          cursor: 'pointer',
+          color: importing ? '#556677' : '#aaccdd',
+          cursor: importing ? 'default' : 'pointer',
           fontSize: 11,
           padding: '4px 10px',
         }}
       >
-        ⬆ 导入
+        {importing ? '...' : '⬆ 导入'}
       </button>
       <input
         ref={fileInputRef}
         type="file"
-        accept=".json"
+        accept=".zip,.md"
         onChange={handleImport}
         style={{ display: 'none' }}
       />
