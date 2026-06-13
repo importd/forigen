@@ -79,29 +79,34 @@ function IdeaCard({ slug, color, ideaDetails }: { slug: string; color: string; i
           borderTop: `1px solid #1a2a3d`,
           paddingTop: 10,
         }}>
-          <DetailRow label="定义" labelEn="Definition" textZh={detail.definition_zh} textEn={detail.definition_en} />
-          <DetailRow label="渊源" labelEn="Origin" textZh={detail.origin_zh} textEn={detail.origin_en} />
-          <DetailRow label="演变" labelEn="Evolution" textZh={detail.evolution_zh} textEn={detail.evolution_en} />
-          <DetailRow label="辨析" labelEn="Clarification" textZh={detail.misconception_zh} textEn={detail.misconception_en} />
+          <DetailRow label="概念界定" labelEn="What It Is" textZh={detail.definition_zh} textEn={detail.definition_en} color={color} />
+          <DetailRow label="思想渊源" labelEn="Where It Comes From" textZh={detail.origin_zh} textEn={detail.origin_en} color={color} />
+          <DetailRow label="理论流变" labelEn="How It Evolved" textZh={detail.evolution_zh} textEn={detail.evolution_en} color={color} />
+          <DetailRow label="常见误读" labelEn="Common Misconceptions" textZh={detail.misconception_zh} textEn={detail.misconception_en} color={color} />
         </div>
       )}
     </div>
   );
 }
 
-function DetailRow({ label, labelEn, textZh, textEn }: {
+function DetailRow({ label, labelEn, textZh, textEn, color }: {
   label: string; labelEn: string;
   textZh: string; textEn: string;
+  color: string;
 }) {
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ fontSize: 9, color: '#445566', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        {label} · {labelEn}
+    <div style={{ marginBottom: 10 }}>
+      <div style={{
+        fontSize: 12, fontWeight: 600, color,
+        marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6,
+      }}>
+        <span>{label}</span>
+        <span style={{ color: '#445566', fontSize: 10, fontWeight: 400 }}>{labelEn}</span>
       </div>
-      <div style={{ fontSize: 11, color: '#99aabb', lineHeight: 1.55, marginBottom: 2 }}>
+      <div style={{ fontSize: 12, color: '#c8d6e0', lineHeight: 1.65, marginBottom: 3 }}>
         {textZh}
       </div>
-      <div style={{ fontSize: 10, color: '#556677', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 11, color: '#667788', lineHeight: 1.55 }}>
         {textEn}
       </div>
     </div>
