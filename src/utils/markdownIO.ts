@@ -1,15 +1,79 @@
 import JSZip from 'jszip';
 import type { Thinker } from '../types';
 import { SCHOOL_LABELS, getSchoolColor } from '../data/schools';
+import { SCHOOL_THEORIES as BUILTIN_SCHOOL_THEORIES } from '../data/schoolTheories';
 import { REGION_LABELS, IDEA_LABELS } from '../data/labels';
+import { IDEA_DETAILS } from '../data/ideaDetails';
+import type { IdeaDetail } from '../data/ideaDetails';
+import type { TheoryModule } from '../data/schoolTheories';
 
 /**
  * Generate a complete Markdown file for a thinker,
  * with all metadata in YAML frontmatter and notes as body.
  */
-function thinkerToMarkdown(thinker: Thinker, note: string): string {
+function thinkerToMarkdown(
+  thinker: Thinker,
+  note: string,
+  opts?: {
+    customIdeaDetails?: Record<string, IdeaDetail>;
+    customSchoolTheories?: Record<string, TheoryModule[]>;
+  }
+): string {
   const school = SCHOOL_LABELS[thinker.school];
   const region = REGION_LABELS[thinker.region];
+
+  // Merge built-in + custom idea details
+  const allIdeaDetails: Record<string, IdeaDetail> = { ...IDEA_DETAILS, ...(opts?.customIdeaDetails || {}) };
+  // Merge built-in + custom school theories
+  const allSchoolTheories: Record<string, TheoryModule[]> = { ...BUILTIN_SCHOOL_THEORIES };
+  if (opts?.customSchoolTheories) {
+    for (const [slug, theories] of Object.entries(opts.customSchoolTheories)) {
+      allSchoolTheories[slug] = [...(allSchoolTheories[slug] || []), ...theories];
+    }
+  }
+
+  // Build core_ideas with detail fields when available
+  const coreIdeasYaml = thinker.coreIdeas
+    .map((slug) => {
+      const label = IDEA_LABELS[slug];
+      const detail = allIdeaDetails[slug];
+      const lines: string[] = [];
+      lines.push(`  - slug: "${slug}"`);
+      if (label) {
+        lines.push(`    label: "${label.zh}"`);
+        lines.push(`    label_en: "${label.en}"`);
+      }
+      if (detail) {
+        lines.push(`    definition: "${detail.definition_zh.replace(/"/g, '\\"')}"`);
+        lines.push(`    definition_en: "${detail.definition_en.replace(/"/g, '\\"')}"`);
+        lines.push(`    origin: "${detail.origin_zh.replace(/"/g, '\\"')}"`);
+        lines.push(`    origin_en: "${detail.origin_en.replace(/"/g, '\\"')}"`);
+        lines.push(`    evolution: "${detail.evolution_zh.replace(/"/g, '\\"')}"`);
+        lines.push(`    evolution_en: "${detail.evolution_en.replace(/"/g, '\\"')}"`);
+        lines.push(`    misconception: "${detail.misconception_zh.replace(/"/g, '\\"')}"`);
+        lines.push(`    misconception_en: "${detail.misconception_en.replace(/"/g, '\\"')}"`);
+      }
+      return lines.join('\n');
+    })
+    .join('\n');
+
+  // Build school_theories for this thinker's school
+  const schoolTheories = allSchoolTheories[thinker.school];
+  const schoolTheoriesYaml = schoolTheories
+    ? schoolTheories
+        .map((t) =>
+          [
+            `  - school: "${thinker.school}"`,
+            `    slug: "${t.slug}"`,
+            `    zh: "${t.zh}"`,
+            `    en: "${t.en}"`,
+            `    desc_zh: "${t.desc_zh.replace(/"/g, '\\"')}"`,
+            `    desc_en: "${t.desc_en.replace(/"/g, '\\"')}"`,
+            `    icon: "${t.icon}"`,
+          ].join('\n')
+        )
+        .join('\n')
+    : '';
 
   // Build YAML frontmatter
   const frontmatter = [
@@ -35,10 +99,8 @@ function thinkerToMarkdown(thinker: Thinker, note: string): string {
     `influenced_by: [${thinker.influencedBy.map((s) => `"${s}"`).join(', ')}]`,
     `influenced: [${thinker.influenced.map((s) => `"${s}"`).join(', ')}]`,
     `core_ideas:`,
-    ...thinker.coreIdeas.map((idea) => {
-      const label = IDEA_LABELS[idea];
-      return `  - slug: "${idea}"\n    label: "${label?.zh || ''}"\n    label_en: "${label?.en || ''}"`;
-    }),
+    coreIdeasYaml,
+    ...(schoolTheoriesYaml ? ['school_theories:', schoolTheoriesYaml] : []),
     '---',
   ].join('\n');
 
@@ -95,6 +157,38 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
       } else if (trimmed.startsWith('label_en:')) {
         if (listItems.length > 0) {
           listItems[listItems.length - 1].label_en = trimmed.slice(12).replace(/"/g, '');
+        }
+      } else if (trimmed.startsWith('definition_en:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].definition_en = trimmed.slice(16).replace(/"/g, '');
+      } else if (trimmed.startsWith('definition:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].definition = trimmed.slice(13).replace(/"/g, '');
+      } else if (trimmed.startsWith('origin_en:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].origin_en = trimmed.slice(12).replace(/"/g, '');
+      } else if (trimmed.startsWith('origin:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].origin = trimmed.slice(9).replace(/"/g, '');
+      } else if (trimmed.startsWith('evolution_en:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].evolution_en = trimmed.slice(15).replace(/"/g, '');
+      } else if (trimmed.startsWith('evolution:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].evolution = trimmed.slice(12).replace(/"/g, '');
+      } else if (trimmed.startsWith('misconception_en:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].misconception_en = trimmed.slice(19).replace(/"/g, '');
+      } else if (trimmed.startsWith('misconception:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].misconception = trimmed.slice(16).replace(/"/g, '');
+      } else if (trimmed.startsWith('- school:')) {
+        listItems.push({ school: trimmed.slice(10).replace(/"/g, '') });
+      } else if (trimmed.startsWith('desc_zh:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].desc_zh = trimmed.slice(10).replace(/"/g, '');
+      } else if (trimmed.startsWith('desc_en:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].desc_en = trimmed.slice(10).replace(/"/g, '');
+      } else if (trimmed.startsWith('icon:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].icon = trimmed.slice(7).replace(/"/g, '');
+      } else if (trimmed.startsWith('zh:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].zh = trimmed.slice(5).replace(/"/g, '');
+      } else if (trimmed.startsWith('en:')) {
+        if (listItems.length > 0) listItems[listItems.length - 1].en = trimmed.slice(5).replace(/"/g, '');
+      } else if (trimmed.startsWith('slug:')) {
+        if (listItems.length > 0 && !listItems[listItems.length - 1].slug) {
+          listItems[listItems.length - 1].slug = trimmed.slice(7).replace(/"/g, '');
         }
       }
       continue;
@@ -183,13 +277,17 @@ function metadataToThinker(metadata: Record<string, any>): Thinker | null {
  */
 export async function exportAllMarkdown(
   thinkers: Thinker[],
-  notes: Record<string, string>
+  notes: Record<string, string>,
+  opts?: {
+    customIdeaDetails?: Record<string, IdeaDetail>;
+    customSchoolTheories?: Record<string, TheoryModule[]>;
+  }
 ): Promise<void> {
   const zip = new JSZip();
 
   for (const thinker of thinkers) {
     const note = notes[thinker.id] || '';
-    const md = thinkerToMarkdown(thinker, note);
+    const md = thinkerToMarkdown(thinker, note, opts);
     zip.file(`${thinker.id}.md`, md);
   }
 
@@ -204,17 +302,23 @@ export async function exportAllMarkdown(
 }
 
 /**
- * Extract custom labels from parsed frontmatter metadata.
+ * Extract custom labels, idea details, and school theories from parsed frontmatter metadata.
  */
-function extractLabels(metadata: Record<string, any>): {
+interface ExtractedData {
   schools: Record<string, { en: string; zh: string; color?: string }>;
   regions: Record<string, { en: string; zh: string }>;
   ideas: Record<string, { en: string; zh: string }>;
-} {
-  const result = {
-    schools: {} as Record<string, { en: string; zh: string; color?: string }>,
-    regions: {} as Record<string, { en: string; zh: string }>,
-    ideas: {} as Record<string, { en: string; zh: string }>,
+  ideaDetails: Record<string, any>;
+  schoolTheories: Record<string, any[]>;
+}
+
+function extractLabels(metadata: Record<string, any>): ExtractedData {
+  const result: ExtractedData = {
+    schools: {},
+    regions: {},
+    ideas: {},
+    ideaDetails: {},
+    schoolTheories: {},
   };
 
   // School label (with optional color)
@@ -236,18 +340,58 @@ function extractLabels(metadata: Record<string, any>): {
     };
   }
 
-  // Core idea labels
+  // Core idea labels + details
   const ideas = metadata.core_ideas;
   if (Array.isArray(ideas)) {
     for (const idea of ideas) {
-      const slug = typeof idea === 'string' ? idea : idea.slug;
-      const label = typeof idea === 'string' ? idea : idea.label;
-      const labelEn = typeof idea === 'string' ? undefined : idea.label_en;
-      if (slug && (label || labelEn)) {
-        result.ideas[slug] = {
-          zh: label || slug,
-          en: labelEn || label || slug,
-        };
+      if (typeof idea === 'string') {
+        const slug = idea;
+        result.ideas[slug] = { zh: slug, en: slug };
+      } else {
+        const slug = idea.slug;
+        const label = idea.label;
+        const labelEn = idea.label_en;
+        if (slug && (label || labelEn)) {
+          result.ideas[slug] = {
+            zh: label || slug,
+            en: labelEn || label || slug,
+          };
+        }
+        // Extract detail fields if present
+        if (slug && (idea.definition || idea.definition_en)) {
+          result.ideaDetails[slug] = {
+            slug,
+            zh: label || idea.zh || slug,
+            en: labelEn || idea.en || slug,
+            definition_zh: idea.definition || '',
+            definition_en: idea.definition_en || '',
+            origin_zh: idea.origin || '',
+            origin_en: idea.origin_en || '',
+            evolution_zh: idea.evolution || '',
+            evolution_en: idea.evolution_en || '',
+            misconception_zh: idea.misconception || '',
+            misconception_en: idea.misconception_en || '',
+          };
+        }
+      }
+    }
+  }
+
+  // School theories
+  const theories = metadata.school_theories;
+  if (Array.isArray(theories)) {
+    for (const t of theories) {
+      const school = t.school;
+      if (school && t.slug) {
+        if (!result.schoolTheories[school]) result.schoolTheories[school] = [];
+        result.schoolTheories[school].push({
+          slug: t.slug,
+          zh: t.zh || t.slug,
+          en: t.en || t.slug,
+          desc_zh: t.desc_zh || '',
+          desc_en: t.desc_en || '',
+          icon: t.icon || '📌',
+        });
       }
     }
   }
@@ -263,7 +407,7 @@ function processMdContent(
   filename: string,
   notes: Record<string, string>,
   newThinkers: Thinker[],
-  labels: ReturnType<typeof extractLabels>,
+  labels: ExtractedData,
   errors: string[]
 ): { noteCount: number; thinkerCount: number } {
   let noteCount = 0;
@@ -275,11 +419,22 @@ function processMdContent(
     return { noteCount, thinkerCount };
   }
 
-  // Extract labels from this file's frontmatter
+  // Extract labels, idea details, and school theories from this file's frontmatter
   const fileLabels = extractLabels(result.metadata);
   Object.assign(labels.schools, fileLabels.schools);
   Object.assign(labels.regions, fileLabels.regions);
   Object.assign(labels.ideas, fileLabels.ideas);
+  Object.assign(labels.ideaDetails, fileLabels.ideaDetails);
+  for (const [school, theories] of Object.entries(fileLabels.schoolTheories)) {
+    if (!labels.schoolTheories[school]) labels.schoolTheories[school] = [];
+    const slugs = new Set(labels.schoolTheories[school].map((t: any) => t.slug));
+    for (const t of theories) {
+      if (!slugs.has(t.slug)) {
+        labels.schoolTheories[school].push(t);
+        slugs.add(t.slug);
+      }
+    }
+  }
 
   const thinkerId = result.metadata.id || filename.replace('.md', '');
   const note = result.note;
@@ -301,7 +456,8 @@ function processMdContent(
 }
 
 /**
- * Import a .zip or .md file. Returns notes to restore AND new thinkers to add.
+ * Import a .zip or .md file. Returns notes to restore AND new thinkers to add,
+ * plus any idea details and school theories extracted from the files.
  */
 export async function importAllMarkdown(
   file: File
@@ -309,13 +465,15 @@ export async function importAllMarkdown(
   notes: Record<string, string>;
   newThinkers: Thinker[];
   labels: { schools: Record<string, { en: string; zh: string; color?: string }>; regions: Record<string, { en: string; zh: string }>; ideas: Record<string, { en: string; zh: string }> };
+  ideaDetails: Record<string, IdeaDetail>;
+  schoolTheories: Record<string, TheoryModule[]>;
   noteCount: number;
   thinkerCount: number;
   errors: string[];
 }> {
   const notes: Record<string, string> = {};
   const newThinkers: Thinker[] = [];
-  const labels = { schools: {} as Record<string, { en: string; zh: string; color?: string }>, regions: {} as Record<string, { en: string; zh: string }>, ideas: {} as Record<string, { en: string; zh: string }> };
+  const labels: ExtractedData = { schools: {}, regions: {}, ideas: {}, ideaDetails: {}, schoolTheories: {} };
   const errors: string[] = [];
   let noteCount = 0;
   let thinkerCount = 0;
@@ -346,5 +504,14 @@ export async function importAllMarkdown(
     }
   }
 
-  return { notes, newThinkers, labels, noteCount, thinkerCount, errors };
+  return {
+    notes,
+    newThinkers,
+    labels: { schools: labels.schools, regions: labels.regions, ideas: labels.ideas },
+    ideaDetails: labels.ideaDetails,
+    schoolTheories: labels.schoolTheories,
+    noteCount,
+    thinkerCount,
+    errors,
+  };
 }

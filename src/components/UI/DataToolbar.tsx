@@ -8,12 +8,12 @@ interface DataToolbarProps {
 }
 
 export function DataToolbar({ thinkers }: DataToolbarProps) {
-  const { notes, setNote, upsertCustomThinker, mergeLabels } = useAppContext();
+  const { notes, setNote, upsertCustomThinker, mergeLabels, customIdeaDetails, mergeIdeaDetails, customSchoolTheories, mergeSchoolTheories } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
   const handleExport = async () => {
-    await exportAllMarkdown(thinkers, notes);
+    await exportAllMarkdown(thinkers, notes, { customIdeaDetails, customSchoolTheories });
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +21,7 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
     if (!file) return;
     setImporting(true);
     try {
-      const { notes: imported, newThinkers, labels, noteCount, thinkerCount, errors } =
+      const { notes: imported, newThinkers, labels, ideaDetails, schoolTheories, noteCount, thinkerCount, errors } =
         await importAllMarkdown(file);
 
       for (const [id, content] of Object.entries(imported)) {
@@ -32,8 +32,10 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
         upsertCustomThinker(thinker);
       }
 
-      // Save custom labels from the imported files
+      // Save custom labels, idea details, and school theories from the imported files
       mergeLabels(labels);
+      if (Object.keys(ideaDetails).length > 0) mergeIdeaDetails(ideaDetails);
+      if (Object.keys(schoolTheories).length > 0) mergeSchoolTheories(schoolTheories);
 
       const parts: string[] = [];
       if (noteCount > 0) parts.push(`${noteCount} 条笔记`);

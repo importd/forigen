@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { getSchoolTheories } from '../../../utils/scholarship';
+import type { TheoryModule } from '../../../data/schoolTheories';
 import { SectionLabel } from './CoreIdeasSection';
 
 interface BranchTheoriesProps {
   school: string;
   color: string;
+  schoolTheories: Record<string, TheoryModule[]>;
 }
 
-export function BranchTheories({ school, color }: BranchTheoriesProps) {
-  const theories = getSchoolTheories(school);
+export function BranchTheories({ school, color, schoolTheories }: BranchTheoriesProps) {
+  const theories = schoolTheories[school] || [];
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   if (theories.length === 0) return null;

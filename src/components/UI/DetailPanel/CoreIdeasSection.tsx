@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import type { Thinker } from '../../../types';
 import { IDEA_LABELS } from '../../../data/labels';
-import { IDEA_DETAILS, type IdeaDetail } from '../../../data/ideaDetails';
+import type { IdeaDetail } from '../../../data/ideaDetails';
 
 interface CoreIdeasSectionProps {
   thinker: Thinker;
   color: string;
+  ideaDetails: Record<string, IdeaDetail>;
 }
 
-function IdeaCard({ slug, color }: { slug: string; color: string }) {
+function IdeaCard({ slug, color, ideaDetails }: { slug: string; color: string; ideaDetails: Record<string, IdeaDetail> }) {
   const [expanded, setExpanded] = useState(false);
   const label = IDEA_LABELS[slug];
-  const detail: IdeaDetail | undefined = IDEA_DETAILS[slug];
+  const detail: IdeaDetail | undefined = ideaDetails[slug];
 
   if (!label) return null;
 
@@ -107,11 +108,11 @@ function DetailRow({ label, labelEn, textZh, textEn }: {
   );
 }
 
-export function CoreIdeasSection({ thinker, color }: CoreIdeasSectionProps) {
+export function CoreIdeasSection({ thinker, color, ideaDetails }: CoreIdeasSectionProps) {
   const ideas = thinker.coreIdeas;
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? ideas : ideas.slice(0, 5);
-  const hasDetail = ideas.some((slug) => IDEA_DETAILS[slug]);
+  const hasDetail = ideas.some((slug) => ideaDetails[slug]);
 
   return (
     <div style={{ padding: '0 20px 16px' }}>
@@ -121,7 +122,7 @@ export function CoreIdeasSection({ thinker, color }: CoreIdeasSectionProps) {
         /* Accordion cards for ideas with academic detail */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {visible.map((slug) => (
-            <IdeaCard key={slug} slug={slug} color={color} />
+            <IdeaCard key={slug} slug={slug} color={color} ideaDetails={ideaDetails} />
           ))}
         </div>
       ) : (

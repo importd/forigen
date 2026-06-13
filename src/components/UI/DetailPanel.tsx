@@ -1,6 +1,8 @@
 import type { Thinker } from '../../types';
 import { SCHOOL_COLORS, SCHOOL_LABELS } from '../../data/schools';
+import { SCHOOL_THEORIES as BUILTIN_SCHOOL_THEORIES } from '../../data/schoolTheories';
 import { REGION_LABELS } from '../../data/labels';
+import { IDEA_DETAILS } from '../../data/ideaDetails';
 import { useAppContext } from '../../context/AppContext';
 import { HeaderSection } from './DetailPanel/HeaderSection';
 import { CoreIdeasSection } from './DetailPanel/CoreIdeasSection';
@@ -19,7 +21,7 @@ interface DetailPanelProps {
 export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: DetailPanelProps) {
   if (!thinker) return null;
 
-  const { customLabels } = useAppContext();
+  const { customLabels, customIdeaDetails, customSchoolTheories } = useAppContext();
 
   // Merge label maps
   const allSchoolLabels = { ...SCHOOL_LABELS, ...customLabels.schools };
@@ -33,6 +35,15 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
     if (entry.color) mergedColors[slug] = entry.color;
   }
   const color = mergedColors[thinker.school] || '#4fc3f7';
+
+  // Merge idea details: built-in + custom
+  const mergedIdeaDetails = { ...IDEA_DETAILS, ...customIdeaDetails };
+
+  // Merge school theories: built-in + custom
+  const mergedSchoolTheories: typeof BUILTIN_SCHOOL_THEORIES = { ...BUILTIN_SCHOOL_THEORIES };
+  for (const [slug, theories] of Object.entries(customSchoolTheories)) {
+    mergedSchoolTheories[slug] = [...(mergedSchoolTheories[slug] || []), ...theories];
+  }
 
   return (
     <div style={{
@@ -71,7 +82,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
 
       {/* Core Ideas */}
       <div style={{ borderBottom: '1px solid #1a3a5c' }}>
-        <CoreIdeasSection thinker={thinker} color={color} />
+        <CoreIdeasSection thinker={thinker} color={color} ideaDetails={mergedIdeaDetails} />
       </div>
 
       {/* Key Works */}
@@ -91,7 +102,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
 
       {/* Branch-specific theories */}
       <div style={{ borderBottom: '1px solid #1a3a5c' }}>
-        <BranchTheories school={thinker.school} color={color} />
+        <BranchTheories school={thinker.school} color={color} schoolTheories={mergedSchoolTheories} />
       </div>
 
       {/* Note Editor */}
