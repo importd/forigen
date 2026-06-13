@@ -30,9 +30,8 @@ export function SearchBar({ thinkers, onSelect, query, onQueryChange }: SearchBa
     <div style={{
       position: 'absolute',
       top: 20,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      width: '380px',
+      left: 24,
+      width: '280px',
       zIndex: 20,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     }}>
