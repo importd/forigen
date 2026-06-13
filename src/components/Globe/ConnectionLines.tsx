@@ -66,6 +66,7 @@ function FlowSegment({ curve, color, zoomRef }: {
           count={SEGMENT_COUNT}
           array={positions}
           itemSize={3}
+          args={[positions, 3]}
         />
       </bufferGeometry>
       <lineBasicMaterial color={color} transparent opacity={0} depthWrite={false} />
