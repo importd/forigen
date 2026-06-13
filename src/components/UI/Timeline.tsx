@@ -3,11 +3,12 @@ import { useState, useCallback } from 'react';
 interface TimelineProps {
   year: number;
   onChange: (year: number) => void;
+  thinkerCount?: number;
   minYear?: number;
   maxYear?: number;
 }
 
-export function Timeline({ year, onChange, minYear = 1700, maxYear = 2020 }: TimelineProps) {
+export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear = 2020 }: TimelineProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
 
@@ -49,7 +50,14 @@ export function Timeline({ year, onChange, minYear = 1700, maxYear = 2020 }: Tim
     }}>
       {/* Year display */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-        <div style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>{Math.round(year)}</div>
+        <div style={{ fontSize: 18, fontWeight: 'bold', color: '#fff' }}>
+            {Math.round(year)}
+            {thinkerCount !== undefined && (
+              <span style={{ fontSize: 11, color: '#556677', fontWeight: 'normal', marginLeft: 8 }}>
+                {thinkerCount} 人
+              </span>
+            )}
+          </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span
             style={{ fontSize: 10, color: '#556677', cursor: 'pointer', userSelect: 'none' }}

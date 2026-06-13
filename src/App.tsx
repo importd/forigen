@@ -41,10 +41,7 @@ function AppContent() {
         hasNote={hasNote}
       />
 
-      {/* Data export/import */}
-      <DataToolbar thinkers={allThinkers} />
-
-      {/* Search Bar */}
+{/* Search Bar */}
       <SearchBar
         thinkers={allThinkers}
         onSelect={handleSelectThinker}
@@ -52,10 +49,14 @@ function AppContent() {
         onQueryChange={setSearchQuery}
       />
 
+      {/* Data backup (bottom-left) */}
+      <DataToolbar thinkers={allThinkers} />
+
       {/* Timeline */}
       <Timeline
         year={timelineYear}
         onChange={setTimelineYear}
+        thinkerCount={filteredThinkers.length}
       />
 
       {/* Detail Panel */}
