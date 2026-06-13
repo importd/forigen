@@ -3,6 +3,7 @@ import { GlobeScene } from './components/Globe/GlobeScene';
 import { SearchBar } from './components/UI/SearchBar';
 import { Timeline } from './components/UI/Timeline';
 import { DetailPanel } from './components/UI/DetailPanel';
+import { DataToolbar } from './components/UI/DataToolbar';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { useData } from './hooks/useData';
 import type { Thinker } from './types';
@@ -39,6 +40,9 @@ function AppContent() {
         onSelectThinker={handleSelectThinker}
         hasNote={hasNote}
       />
+
+      {/* Export/Import toolbar */}
+      <DataToolbar />
 
       {/* Search Bar */}
       <SearchBar
