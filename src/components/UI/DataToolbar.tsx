@@ -8,7 +8,7 @@ interface DataToolbarProps {
 }
 
 export function DataToolbar({ thinkers }: DataToolbarProps) {
-  const { notes, setNote, addCustomThinker } = useAppContext();
+  const { notes, setNote, upsertCustomThinker } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
@@ -29,7 +29,7 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
       }
 
       for (const thinker of newThinkers) {
-        addCustomThinker(thinker);
+        upsertCustomThinker(thinker);
       }
 
       const parts: string[] = [];

@@ -31,7 +31,7 @@ interface AppContextType {
   setNote: (id: string, content: string) => void;
   hasNote: (id: string) => boolean;
   customThinkers: Thinker[];
-  addCustomThinker: (thinker: Thinker) => void;
+  upsertCustomThinker: (thinker: Thinker) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -58,11 +58,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addCustomThinker = useCallback((thinker: Thinker) => {
+  const upsertCustomThinker = useCallback((thinker: Thinker) => {
     setCustomThinkers((prev) => {
-      // Don't duplicate
-      if (prev.some((t) => t.id === thinker.id)) return prev;
-      const next = [...prev, thinker];
+      const idx = prev.findIndex((t) => t.id === thinker.id);
+      const next = idx >= 0
+        ? [...prev.slice(0, idx), thinker, ...prev.slice(idx + 1)]
+        : [...prev, thinker];
       saveJSON(CUSTOM_KEY, next);
       return next;
     });
@@ -73,8 +74,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     selectedThinker, setSelectedThinker,
     searchQuery, setSearchQuery,
     notes, getNote, setNote, hasNote,
-    customThinkers, addCustomThinker,
-  }), [timelineYear, selectedThinker, searchQuery, notes, getNote, setNote, hasNote, customThinkers, addCustomThinker]);
+    customThinkers, upsertCustomThinker,
+  }), [timelineYear, selectedThinker, searchQuery, notes, getNote, setNote, hasNote, customThinkers, upsertCustomThinker]);
 
   return (
     <AppContext.Provider value={value}>
