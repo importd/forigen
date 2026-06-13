@@ -229,11 +229,14 @@ function NoteEditor({ thinkerId }: { thinkerId: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load note on thinker change
+  // Load note only when switching thinkers (not on every auto-save)
+  const getNoteRef = useRef(getNote);
+  getNoteRef.current = getNote;
+
   useEffect(() => {
-    setText(getNote(thinkerId));
+    setText(getNoteRef.current(thinkerId));
     setEditing(false);
-  }, [thinkerId, getNote]);
+  }, [thinkerId]);
 
   // Auto-save with debounce
   const handleChange = (value: string) => {
@@ -246,6 +249,7 @@ function NoteEditor({ thinkerId }: { thinkerId: string }) {
 
   const hasContent = !!text.trim();
 
+  // State 1: No content, not editing → show "Add note" button
   if (!editing && !hasContent) {
     return (
       <div style={{
@@ -267,6 +271,39 @@ function NoteEditor({ thinkerId }: { thinkerId: string }) {
     );
   }
 
+  // State 2: Has content, not editing → show rendered note only (click to edit)
+  if (!editing && hasContent) {
+    return (
+      <div style={{
+        marginTop: 16, paddingTop: 12,
+        borderTop: '1px solid #1a3a5c',
+      }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginBottom: 8,
+        }}>
+          <span style={{ fontSize: 10, color: '#556677', textTransform: 'uppercase', letterSpacing: 1 }}>
+            📝 笔记 · Notes
+          </span>
+          <span style={{ fontSize: 9, color: '#445566' }}>
+            ✓ 已保存 · Saved
+          </span>
+        </div>
+        <div
+          onClick={() => setEditing(true)}
+          style={{
+            fontSize: 12, color: '#aaccdd', cursor: 'pointer',
+            padding: '8px 0', whiteSpace: 'pre-wrap',
+            lineHeight: 1.6,
+          }}
+        >
+          {text.length > 200 ? text.slice(0, 200) + '...' : text}
+        </div>
+      </div>
+    );
+  }
+
+  // State 3: Editing → show textarea only
   return (
     <div style={{
       marginTop: 16, paddingTop: 12,
@@ -279,9 +316,19 @@ function NoteEditor({ thinkerId }: { thinkerId: string }) {
         <span style={{ fontSize: 10, color: '#556677', textTransform: 'uppercase', letterSpacing: 1 }}>
           📝 笔记 · Notes
         </span>
-        <span style={{ fontSize: 9, color: '#445566' }}>
-          {hasContent ? '✓ 已保存 · Saved' : '自动保存中...'}
-        </span>
+        <button
+          onClick={() => {
+            setNote(thinkerId, text);
+            setEditing(false);
+          }}
+          style={{
+            background: 'none', border: '1px solid #1a3a5c',
+            borderRadius: 4, color: '#667788', cursor: 'pointer',
+            fontSize: 10, padding: '2px 8px',
+          }}
+        >
+          完成 · Done
+        </button>
       </div>
       <textarea
         ref={textareaRef}
@@ -292,6 +339,7 @@ function NoteEditor({ thinkerId }: { thinkerId: string }) {
           if (!text.trim()) setEditing(false);
         }}
         placeholder="写点关于这位思想家的笔记...&#10;&#10;支持 Markdown 格式：&#10;# 标题&#10;**粗体** *斜体*&#10;- 列表"
+        autoFocus
         style={{
           width: '100%',
           minHeight: '120px',
@@ -307,18 +355,6 @@ function NoteEditor({ thinkerId }: { thinkerId: string }) {
           lineHeight: 1.6,
         }}
       />
-      {hasContent && !editing && (
-        <div
-          onClick={() => setEditing(true)}
-          style={{
-            fontSize: 12, color: '#aaccdd', cursor: 'pointer',
-            padding: '8px 0', whiteSpace: 'pre-wrap',
-            lineHeight: 1.6,
-          }}
-        >
-          {text.length > 200 ? text.slice(0, 200) + '...' : text}
-        </div>
-      )}
     </div>
   );
 }
