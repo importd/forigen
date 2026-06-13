@@ -203,6 +203,57 @@ export async function exportAllMarkdown(
 }
 
 /**
+ * Extract custom labels from parsed frontmatter metadata.
+ */
+function extractLabels(metadata: Record<string, any>): {
+  schools: Record<string, { en: string; zh: string }>;
+  regions: Record<string, { en: string; zh: string }>;
+  ideas: Record<string, { en: string; zh: string }>;
+} {
+  const result = {
+    schools: {} as Record<string, { en: string; zh: string }>,
+    regions: {} as Record<string, { en: string; zh: string }>,
+    ideas: {} as Record<string, { en: string; zh: string }>,
+  };
+
+  // School label
+  const schoolSlug = metadata.school;
+  if (schoolSlug && (metadata.school_label || metadata.school_label_en)) {
+    result.schools[schoolSlug] = {
+      zh: metadata.school_label || schoolSlug,
+      en: metadata.school_label_en || schoolSlug,
+    };
+  }
+
+  // Region label
+  const regionSlug = metadata.region;
+  if (regionSlug && (metadata.region_label || metadata.region_label_en)) {
+    result.regions[regionSlug] = {
+      zh: metadata.region_label || regionSlug,
+      en: metadata.region_label_en || regionSlug,
+    };
+  }
+
+  // Core idea labels
+  const ideas = metadata.core_ideas;
+  if (Array.isArray(ideas)) {
+    for (const idea of ideas) {
+      const slug = typeof idea === 'string' ? idea : idea.slug;
+      const label = typeof idea === 'string' ? idea : idea.label;
+      const labelEn = typeof idea === 'string' ? undefined : idea.label_en;
+      if (slug && (label || labelEn)) {
+        result.ideas[slug] = {
+          zh: label || slug,
+          en: labelEn || label || slug,
+        };
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
  * Process a single .md file string.
  */
 function processMdContent(
@@ -210,6 +261,7 @@ function processMdContent(
   filename: string,
   notes: Record<string, string>,
   newThinkers: Thinker[],
+  labels: ReturnType<typeof extractLabels>,
   errors: string[]
 ): { noteCount: number; thinkerCount: number } {
   let noteCount = 0;
@@ -220,6 +272,12 @@ function processMdContent(
     errors.push(`${filename}: parse failed`);
     return { noteCount, thinkerCount };
   }
+
+  // Extract labels from this file's frontmatter
+  const fileLabels = extractLabels(result.metadata);
+  Object.assign(labels.schools, fileLabels.schools);
+  Object.assign(labels.regions, fileLabels.regions);
+  Object.assign(labels.ideas, fileLabels.ideas);
 
   const thinkerId = result.metadata.id || filename.replace('.md', '');
   const note = result.note;
@@ -248,12 +306,14 @@ export async function importAllMarkdown(
 ): Promise<{
   notes: Record<string, string>;
   newThinkers: Thinker[];
+  labels: { schools: Record<string, { en: string; zh: string }>; regions: Record<string, { en: string; zh: string }>; ideas: Record<string, { en: string; zh: string }> };
   noteCount: number;
   thinkerCount: number;
   errors: string[];
 }> {
   const notes: Record<string, string> = {};
   const newThinkers: Thinker[] = [];
+  const labels = { schools: {} as Record<string, { en: string; zh: string }>, regions: {} as Record<string, { en: string; zh: string }>, ideas: {} as Record<string, { en: string; zh: string }> };
   const errors: string[] = [];
   let noteCount = 0;
   let thinkerCount = 0;
@@ -261,7 +321,7 @@ export async function importAllMarkdown(
   if (file.name.endsWith('.md')) {
     // Single .md file
     const md = await file.text();
-    const result = processMdContent(md, file.name, notes, newThinkers, errors);
+    const result = processMdContent(md, file.name, notes, newThinkers, labels, errors);
     noteCount = result.noteCount;
     thinkerCount = result.thinkerCount;
   } else {
@@ -275,7 +335,7 @@ export async function importAllMarkdown(
     for (const [filename, zipEntry] of entries) {
       try {
         const md = await zipEntry.async('string');
-        const result = processMdContent(md, filename, notes, newThinkers, errors);
+        const result = processMdContent(md, filename, notes, newThinkers, labels, errors);
         noteCount += result.noteCount;
         thinkerCount += result.thinkerCount;
       } catch {
@@ -284,5 +344,5 @@ export async function importAllMarkdown(
     }
   }
 
-  return { notes, newThinkers, noteCount, thinkerCount, errors };
+  return { notes, newThinkers, labels, noteCount, thinkerCount, errors };
 }

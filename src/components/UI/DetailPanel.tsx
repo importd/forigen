@@ -14,9 +14,16 @@ interface DetailPanelProps {
 export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: DetailPanelProps) {
   if (!thinker) return null;
 
+  const { customLabels } = useAppContext();
+
+  // Merge hardcoded labels with custom labels from uploaded files
+  const allSchoolLabels = { ...SCHOOL_LABELS, ...customLabels.schools };
+  const allRegionLabels = { ...REGION_LABELS, ...customLabels.regions };
+  const allIdeaLabels = { ...IDEA_LABELS, ...customLabels.ideas };
+
   const color = SCHOOL_COLORS[thinker.school] || '#4fc3f7';
-  const school = SCHOOL_LABELS[thinker.school];
-  const region = REGION_LABELS[thinker.region];
+  const school = allSchoolLabels[thinker.school];
+  const region = allRegionLabels[thinker.region];
 
   const getThinkerById = (id: string) => allThinkers.find(t => t.id === id);
 
@@ -89,7 +96,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {thinker.coreIdeas.map((idea) => {
-              const label = IDEA_LABELS[idea];
+              const label = allIdeaLabels[idea];
               return (
                 <span key={idea} style={{
                   fontSize: 11,

@@ -8,7 +8,7 @@ interface DataToolbarProps {
 }
 
 export function DataToolbar({ thinkers }: DataToolbarProps) {
-  const { notes, setNote, upsertCustomThinker } = useAppContext();
+  const { notes, setNote, upsertCustomThinker, mergeLabels } = useAppContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
 
@@ -21,7 +21,7 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
     if (!file) return;
     setImporting(true);
     try {
-      const { notes: imported, newThinkers, noteCount, thinkerCount, errors } =
+      const { notes: imported, newThinkers, labels, noteCount, thinkerCount, errors } =
         await importAllMarkdown(file);
 
       for (const [id, content] of Object.entries(imported)) {
@@ -31,6 +31,9 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
       for (const thinker of newThinkers) {
         upsertCustomThinker(thinker);
       }
+
+      // Save custom labels from the imported files
+      mergeLabels(labels);
 
       const parts: string[] = [];
       if (noteCount > 0) parts.push(`${noteCount} 条笔记`);
