@@ -7,8 +7,9 @@ import { SCHOOL_COLORS } from '../../data/schools';
 import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
 
 const REF_DISTANCE = 4.0;
-const MIN_SCALE = 0.35;
-const MAX_SCALE = 2.2;
+const NODE_MIN = 0.35;     // node can shrink a lot (distinguish countries)
+const NODE_MAX = 2.2;
+const LABEL_MIN = 0.6;     // label has higher floor (always readable)
 
 interface ThinkerNodeProps {
   thinker: Thinker;
@@ -39,14 +40,13 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
     const worldPos = new THREE.Vector3();
     groupRef.current.getWorldPosition(worldPos);
     const dist = camera.position.distanceTo(worldPos);
-    const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, dist / REF_DISTANCE));
+    const nodeScale = Math.max(NODE_MIN, Math.min(NODE_MAX, dist / REF_DISTANCE));
+    const labelScale = Math.max(LABEL_MIN, Math.min(NODE_MAX, dist / REF_DISTANCE));
 
-    // Scale the 3D group (node + glows)
-    groupRef.current.scale.setScalar(scale);
+    groupRef.current.scale.setScalar(nodeScale);
 
-    // Scale the HTML label proportionally
     if (labelRef.current) {
-      labelRef.current.style.transform = `scale(${scale})`;
+      labelRef.current.style.transform = `scale(${labelScale})`;
     }
   });
 
