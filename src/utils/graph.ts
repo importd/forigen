@@ -5,27 +5,40 @@ export function buildConnections(thinkers: Thinker[]): Connection[] {
   const connections: Connection[] = [];
   const seen = new Set<string>();
 
+  const addConnection = (fromId: string, toId: string) => {
+    const from = thinkerMap.get(fromId);
+    const to = thinkerMap.get(toId);
+    if (!from || !to) return;
+    const pairKey = [fromId, toId].sort().join('->');
+    if (seen.has(pairKey)) return;
+    seen.add(pairKey);
+
+    connections.push({
+      id: `${fromId}->${toId}`,
+      from: fromId,
+      to: toId,
+      fromLat: from.latitude,
+      fromLng: from.longitude,
+      toLat: to.latitude,
+      toLng: to.longitude,
+      school: from.school,
+    });
+  };
+
   for (const thinker of thinkers) {
+    // "I influenced them" — forward direction (from thinker.influenced)
     for (const targetId of thinker.influenced) {
-      const target = thinkerMap.get(targetId);
-      if (!target) {
+      if (!thinkerMap.has(targetId)) {
         console.warn(`Unknown thinker slug "${targetId}" referenced by "${thinker.id}"`);
         continue;
       }
-      const pairKey = [thinker.id, targetId].sort().join('->');
-      if (seen.has(pairKey)) continue;
-      seen.add(pairKey);
+      addConnection(thinker.id, targetId);
+    }
 
-      connections.push({
-        id: `${thinker.id}->${targetId}`,
-        from: thinker.id,
-        to: targetId,
-        fromLat: thinker.latitude,
-        fromLng: thinker.longitude,
-        toLat: target.latitude,
-        toLng: target.longitude,
-        school: thinker.school,
-      });
+    // "They influenced me" — reverse direction (from thinker.influencedBy)
+    for (const sourceId of thinker.influencedBy) {
+      if (!thinkerMap.has(sourceId)) continue; // silent — thinker may be added later
+      addConnection(sourceId, thinker.id);
     }
   }
 
