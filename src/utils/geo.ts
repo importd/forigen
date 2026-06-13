@@ -25,10 +25,11 @@ export function latLngToVector3(
 export function midPoint(
   a: THREE.Vector3,
   b: THREE.Vector3,
-  altitude: number = 0.3
+  altitude: number = 0.3,
+  radius: number = 1.5
 ): THREE.Vector3 {
   const mid = a.clone().add(b).multiplyScalar(0.5);
-  mid.normalize().multiplyScalar(1 + altitude);
+  mid.normalize().multiplyScalar(radius * (1 + altitude));
   return mid;
 }
 
