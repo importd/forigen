@@ -44,4 +44,8 @@ export const IDEA_LABELS: Record<string, { en: string; zh: string }> = {
   'division-of-labour': { en: 'Division of Labour', zh: '劳动分工' },
   'invisible-hand': { en: 'Invisible Hand', zh: '看不见的手' },
   'labour-theory-of-value': { en: 'Labour Theory of Value', zh: '劳动价值论' },
+  'digital-alienation': { en: 'Digital Alienation', zh: '数字异化' },
+  'meme-dialectics': { en: 'Meme Dialectics', zh: '梗图辩证法' },
+  'bubble-tea-materialism': { en: 'Bubble Tea Materialism', zh: '奶茶唯物主义' },
+  'procrastination-as-resistance': { en: 'Procrastination as Resistance', zh: '拖延即反抗' },
 };

@@ -11,6 +11,7 @@ export const SCHOOL_COLORS: SchoolColors = {
   'eco-marxism': '#9ccc65',
   'political-economy': '#78909c',
   'utopian-socialism': '#ffca28',
+  'dialectical-synthesis': '#e91e63',
 };
 
 export const SCHOOL_LABELS: Record<string, { en: string; zh: string }> = {
@@ -24,4 +25,5 @@ export const SCHOOL_LABELS: Record<string, { en: string; zh: string }> = {
   'eco-marxism': { en: 'Eco-Marxism', zh: '生态马克思主义' },
   'political-economy': { en: 'Political Economy', zh: '政治经济学' },
   'utopian-socialism': { en: 'Utopian Socialism', zh: '空想社会主义' },
+  'dialectical-synthesis': { en: 'Dialectical Synthesis', zh: '辩证综合派' },
 };
