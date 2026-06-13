@@ -203,8 +203,45 @@ export async function exportAllMarkdown(
 }
 
 /**
- * Import a zip file of Markdown files.
- * Returns notes to restore AND new thinkers to add.
+ * Process a single .md file string.
+ */
+function processMdContent(
+  md: string,
+  filename: string,
+  notes: Record<string, string>,
+  newThinkers: Thinker[],
+  errors: string[]
+): { noteCount: number; thinkerCount: number } {
+  let noteCount = 0;
+  let thinkerCount = 0;
+
+  const result = markdownToData(md);
+  if (!result) {
+    errors.push(`${filename}: parse failed`);
+    return { noteCount, thinkerCount };
+  }
+
+  const thinkerId = result.metadata.id || filename.replace('.md', '');
+  const note = result.note;
+
+  if (note) {
+    notes[thinkerId] = note;
+    noteCount++;
+  }
+
+  if (result.metadata.id && result.metadata.name) {
+    const thinker = metadataToThinker(result.metadata);
+    if (thinker) {
+      newThinkers.push(thinker);
+      thinkerCount++;
+    }
+  }
+
+  return { noteCount, thinkerCount };
+}
+
+/**
+ * Import a .zip or .md file. Returns notes to restore AND new thinkers to add.
  */
 export async function importAllMarkdown(
   file: File
@@ -215,45 +252,35 @@ export async function importAllMarkdown(
   thinkerCount: number;
   errors: string[];
 }> {
-  const zip = new JSZip();
-  const loaded = await zip.loadAsync(file);
   const notes: Record<string, string> = {};
   const newThinkers: Thinker[] = [];
   const errors: string[] = [];
   let noteCount = 0;
   let thinkerCount = 0;
 
-  const entries = Object.entries(loaded.files).filter(
-    ([name]) => name.endsWith('.md')
-  );
+  if (file.name.endsWith('.md')) {
+    // Single .md file
+    const md = await file.text();
+    const result = processMdContent(md, file.name, notes, newThinkers, errors);
+    noteCount = result.noteCount;
+    thinkerCount = result.thinkerCount;
+  } else {
+    // .zip file
+    const zip = new JSZip();
+    const loaded = await zip.loadAsync(file);
+    const entries = Object.entries(loaded.files).filter(
+      ([name]) => name.endsWith('.md')
+    );
 
-  for (const [filename, zipEntry] of entries) {
-    try {
-      const md = await zipEntry.async('string');
-      const result = markdownToData(md);
-      if (!result) {
-        errors.push(`${filename}: parse failed`);
-        continue;
+    for (const [filename, zipEntry] of entries) {
+      try {
+        const md = await zipEntry.async('string');
+        const result = processMdContent(md, filename, notes, newThinkers, errors);
+        noteCount += result.noteCount;
+        thinkerCount += result.thinkerCount;
+      } catch {
+        errors.push(`${filename}: read error`);
       }
-
-      const thinkerId = result.metadata.id || filename.replace('.md', '');
-      const note = result.note;
-
-      if (note) {
-        notes[thinkerId] = note;
-        noteCount++;
-      }
-
-      // Try to extract thinker metadata from frontmatter
-      if (result.metadata.id && result.metadata.name) {
-        const thinker = metadataToThinker(result.metadata);
-        if (thinker) {
-          newThinkers.push(thinker);
-          thinkerCount++;
-        }
-      }
-    } catch {
-      errors.push(`${filename}: read error`);
     }
   }
 

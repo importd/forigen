@@ -62,7 +62,7 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
           marginRight: 12, userSelect: 'none',
         }}
       >
-        ⬇ 下载
+        ⬇ 导出
       </span>
       <span
         onClick={() => !importing && fileInputRef.current?.click()}
@@ -73,7 +73,7 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
           fontSize: 11, userSelect: 'none',
         }}
       >
-        {importing ? '...' : '⬆ 上传'}
+        {importing ? '...' : '⬆ 导入'}
       </span>
       <input
         ref={fileInputRef}
