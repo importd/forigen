@@ -23,9 +23,10 @@ function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker }: 
       {/* Background stars */}
       <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
 
-      {/* Lighting */}
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={0.5} />
+      {/* Lighting — ambient for dark-side visibility, directional for texture definition */}
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 3, 5]} intensity={0.8} />
+      <directionalLight position={[-3, -1, -3]} intensity={0.25} />
 
       {/* Globe elements */}
       <EarthSphere />
