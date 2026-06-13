@@ -1,8 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
+import * as THREE from 'three';
 import type { Thinker } from '../../types';
 import { SCHOOL_COLORS } from '../../data/schools';
 import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
+
+const REF_DISTANCE = 4.0;   // reference camera distance (default view)
+const MIN_SCALE = 0.35;     // smallest scale at closest zoom
+const MAX_SCALE = 2.2;      // largest scale at farthest zoom
 
 interface ThinkerNodeProps {
   thinker: Thinker;
@@ -12,10 +18,13 @@ interface ThinkerNodeProps {
 
 export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) {
   const [hovered, setHovered] = useState(false);
+  const groupRef = useRef<THREE.Group>(null);
+  const { camera } = useThree();
+
   const position = latLngToVector3(thinker.latitude, thinker.longitude, GLOBE_RADIUS);
   const color = SCHOOL_COLORS[thinker.school] || '#4fc3f7';
 
-  // Small but visible — scales naturally with camera distance via perspective projection
+  // Local-space sizes (before group scaling)
   const coreRadius = 0.025 + (thinker.influenced.length * 0.003);
   const innerGlowRadius = coreRadius * 2.2;
   const outerGlowRadius = coreRadius * 3.8;
@@ -25,8 +34,18 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
     if (el) el.raycast = () => {};
   }, []);
 
+  // Inverse zoom scaling: bigger when far (see continents), smaller when near (distinguish countries)
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const worldPos = new THREE.Vector3();
+    groupRef.current.getWorldPosition(worldPos);
+    const dist = camera.position.distanceTo(worldPos);
+    const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, dist / REF_DISTANCE));
+    groupRef.current.scale.setScalar(scale);
+  });
+
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       {/* Outer glow — no raycast, decorative only */}
       <mesh ref={noRaycast}>
         <sphereGeometry args={[hovered ? outerGlowRadius * 1.4 : outerGlowRadius, 32, 32]} />
@@ -69,7 +88,7 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
         />
       </mesh>
 
-      {/* Hover label — positioned above the node, doesn't block clicks */}
+      {/* Hover label — screen-space, positioned above the node */}
       {hovered && (
         <Html
           position={[0, coreRadius * 3.5, 0]}
