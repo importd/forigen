@@ -35,7 +35,8 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerN
     if (el) el.raycast = () => {};
   }, []);
 
-  // Dynamic scaling: nodes and labels grow when far, shrink when near
+  // Dynamic scaling: nodes and labels grow when far, shrink when near.
+  // Labels auto-show when zoomed in close enough (nodes spread out → no overlap).
   useFrame(() => {
     if (!groupRef.current) return;
     const worldPos = new THREE.Vector3();
@@ -48,6 +49,8 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerN
 
     if (labelRef.current) {
       labelRef.current.style.transform = `scale(${labelScale})`;
+      // Show label when zoomed in (camera close) or when hovering
+      labelRef.current.style.display = (hovered || dist < 2.6) ? 'block' : 'none';
     }
   });
 
@@ -108,32 +111,31 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerN
         />
       </mesh>
 
-      {/* Hover label — screen-space HTML with dynamic scale matching the node */}
-      {hovered && (
-        <Html
-          position={[0, coreRadius * 4.0, 0]}
-          center
-          style={{ pointerEvents: 'none' }}
+      {/* Label — always rendered, visibility toggled by zoom level via useFrame */}
+      <Html
+        position={[0, coreRadius * 4.0, 0]}
+        center
+        style={{ pointerEvents: 'none' }}
+      >
+        <div
+          ref={labelRef}
+          style={{
+            color: '#fff',
+            fontSize: '10px',
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
+            textShadow: '0 0 10px rgba(0,0,0,0.9)',
+            lineHeight: 1.3,
+            pointerEvents: 'none',
+            display: 'none',
+          }}
         >
-          <div
-            ref={labelRef}
-            style={{
-              color: '#fff',
-              fontSize: '10px',
-              textAlign: 'center',
-              whiteSpace: 'nowrap',
-              textShadow: '0 0 10px rgba(0,0,0,0.9)',
-              lineHeight: 1.3,
-              pointerEvents: 'none',
-            }}
-          >
-            <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{thinker.name_zh}</div>
-            <div style={{ color: '#aaccdd', fontSize: '10px' }}>
-              {thinker.name} · {thinker.born}–{thinker.died}
-            </div>
+          <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{thinker.name_zh}</div>
+          <div style={{ color: '#aaccdd', fontSize: '10px' }}>
+            {thinker.name} · {thinker.born}–{thinker.died}
           </div>
-        </Html>
-      )}
+        </div>
+      </Html>
     </group>
   );
 }

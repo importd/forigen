@@ -18,7 +18,7 @@ export function useData(timelineYear: number): UseDataResult {
     [customThinkers]
   );
 
-  const connections = useMemo(
+  const allConnections = useMemo(
     () => buildConnections(allThinkers),
     [allThinkers]
   );
@@ -27,6 +27,12 @@ export function useData(timelineYear: number): UseDataResult {
     () => filterThinkersByYear(allThinkers, timelineYear),
     [allThinkers, timelineYear]
   );
+
+  // Only show connections where both thinkers have been "born" at this year
+  const connections = useMemo(() => {
+    const visibleIds = new Set(filteredThinkers.map(t => t.id));
+    return allConnections.filter(conn => visibleIds.has(conn.from) && visibleIds.has(conn.to));
+  }, [allConnections, filteredThinkers]);
 
   return { allThinkers, connections, filteredThinkers };
 }

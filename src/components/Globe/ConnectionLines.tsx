@@ -10,25 +10,35 @@ interface ConnectionLinesProps {
   connections: Connection[];
 }
 
-/** Small glowing dot that travels along a Bezier curve to indicate influence direction. */
-function FlowDot({ curve, color, phase }: {
+/** Animated dashed arc — dash offset slides along the curve to show influence direction. */
+function FlowArc({ curve, color }: {
   curve: THREE.QuadraticBezierCurve3;
   color: string;
-  phase: number;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const lineRef = useRef<any>(null);
+  const points = useMemo(() => curve.getPoints(60), [curve]);
 
-  useFrame(({ clock }) => {
-    if (!meshRef.current) return;
-    const t = ((clock.elapsedTime * 0.25 + phase) % 1);
-    meshRef.current.position.copy(curve.getPoint(t));
+  useFrame((_, delta) => {
+    if (!lineRef.current) return;
+    const mat = lineRef.current.material;
+    if (mat && mat.uniforms && mat.uniforms.dashOffset) {
+      mat.uniforms.dashOffset.value -= delta * 0.08;
+    }
   });
 
   return (
-    <mesh ref={meshRef} frustumCulled={false}>
-      <sphereGeometry args={[0.018, 8, 8]} />
-      <meshBasicMaterial color={color} />
-    </mesh>
+    <Line
+      ref={lineRef}
+      points={points}
+      color={color}
+      lineWidth={1}
+      dashed
+      dashSize={0.03}
+      gapSize={0.02}
+      transparent
+      opacity={0.6}
+      depthWrite={false}
+    />
   );
 }
 
@@ -39,10 +49,8 @@ export function ConnectionLines({ connections }: ConnectionLinesProps) {
       const to = latLngToVector3(conn.toLat, conn.toLng, GLOBE_RADIUS);
       const mid = midPoint(from, to, 0.35, GLOBE_RADIUS);
       const curve = new THREE.QuadraticBezierCurve3(from.clone(), mid, to.clone());
-      const points = curve.getPoints(40);
       return {
         id: conn.id,
-        points,
         curve,
         color: SCHOOL_COLORS[conn.school] || '#4fc3f7',
       };
@@ -51,22 +59,8 @@ export function ConnectionLines({ connections }: ConnectionLinesProps) {
 
   return (
     <group>
-      {arcs.map(({ id, points, curve, color }) => (
-        <group key={id}>
-          {/* Thin static arc */}
-          <Line
-            points={points}
-            color={color}
-            lineWidth={0.8}
-            transparent
-            opacity={0.35}
-            depthWrite={false}
-          />
-          {/* Animated flow dots: source → target */}
-          <FlowDot curve={curve} color={color} phase={0} />
-          <FlowDot curve={curve} color={color} phase={0.33} />
-          <FlowDot curve={curve} color={color} phase={0.66} />
-        </group>
+      {arcs.map(({ id, curve, color }) => (
+        <FlowArc key={id} curve={curve} color={color} />
       ))}
     </group>
   );
