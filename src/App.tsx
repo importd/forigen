@@ -12,6 +12,7 @@ function AppContent() {
     timelineYear, setTimelineYear,
     selectedThinker, setSelectedThinker,
     searchQuery, setSearchQuery,
+    hasNote,
   } = useAppContext();
 
   const { allThinkers, connections, filteredThinkers } = useData(timelineYear);
@@ -36,6 +37,7 @@ function AppContent() {
         timelineYear={timelineYear}
         selectedThinker={selectedThinker}
         onSelectThinker={handleSelectThinker}
+        hasNote={hasNote}
       />
 
       {/* Search Bar */}

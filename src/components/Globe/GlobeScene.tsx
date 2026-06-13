@@ -14,9 +14,10 @@ interface GlobeSceneProps {
   timelineYear: number;
   selectedThinker: Thinker | null;
   onSelectThinker: (thinker: Thinker) => void;
+  hasNote: (id: string) => boolean;
 }
 
-function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker }: GlobeSceneProps) {
+function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker, hasNote }: GlobeSceneProps) {
   const controlsRef = useRef<any>(null);
 
   return (
@@ -43,6 +44,7 @@ function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker }: 
           key={thinker.id}
           thinker={thinker}
           isDeceased={thinker.died < timelineYear}
+          hasNotes={hasNote(thinker.id)}
           onClick={onSelectThinker}
         />
       ))}

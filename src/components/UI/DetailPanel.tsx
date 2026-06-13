@@ -1,6 +1,8 @@
+import { useState, useEffect, useRef } from 'react';
 import type { Thinker } from '../../types';
 import { SCHOOL_COLORS, SCHOOL_LABELS } from '../../data/schools';
 import { REGION_LABELS, IDEA_LABELS } from '../../data/labels';
+import { useAppContext } from '../../context/AppContext';
 
 interface DetailPanelProps {
   thinker: Thinker | null;
@@ -199,14 +201,8 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
           )}
         </div>
 
-        {/* Notes */}
-        <div style={{
-          marginTop: 16, paddingTop: 12,
-          borderTop: '1px solid #1a3a5c',
-          fontSize: 11, color: '#556677',
-        }}>
-          {thinker.hasNotes ? '📝 已有笔记 · Notes available' : '📝 暂无笔记 · No notes yet'}
-        </div>
+        {/* Notes editor */}
+        <NoteEditor thinkerId={thinker.id} />
       </div>
 
       <style>{`
@@ -215,6 +211,107 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
           to { transform: translateX(0); }
         }
       `}</style>
+    </div>
+  );
+}
+
+function NoteEditor({ thinkerId }: { thinkerId: string }) {
+  const { getNote, setNote } = useAppContext();
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load note on thinker change
+  useEffect(() => {
+    setText(getNote(thinkerId));
+    setEditing(false);
+  }, [thinkerId, getNote]);
+
+  // Auto-save with debounce
+  const handleChange = (value: string) => {
+    setText(value);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      setNote(thinkerId, value);
+    }, 500);
+  };
+
+  const hasContent = !!text.trim();
+
+  if (!editing && !hasContent) {
+    return (
+      <div style={{
+        marginTop: 16, paddingTop: 12,
+        borderTop: '1px solid #1a3a5c',
+      }}>
+        <button
+          onClick={() => setEditing(true)}
+          style={{
+            background: 'none', border: '1px dashed #1a3a5c',
+            borderRadius: 6, color: '#556677',
+            cursor: 'pointer', fontSize: 11, padding: '8px 14px',
+            width: '100%', textAlign: 'left',
+          }}
+        >
+          📝 添加笔记 · Add note...
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      marginTop: 16, paddingTop: 12,
+      borderTop: '1px solid #1a3a5c',
+    }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: 8,
+      }}>
+        <span style={{ fontSize: 10, color: '#556677', textTransform: 'uppercase', letterSpacing: 1 }}>
+          📝 笔记 · Notes
+        </span>
+        <span style={{ fontSize: 9, color: '#445566' }}>
+          {hasContent ? '✓ 已保存 · Saved' : '自动保存中...'}
+        </span>
+      </div>
+      <textarea
+        ref={textareaRef}
+        value={text}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={() => {
+          setNote(thinkerId, text);
+          if (!text.trim()) setEditing(false);
+        }}
+        placeholder="写点关于这位思想家的笔记...&#10;&#10;支持 Markdown 格式：&#10;# 标题&#10;**粗体** *斜体*&#10;- 列表"
+        style={{
+          width: '100%',
+          minHeight: '120px',
+          background: '#111d2d',
+          border: '1px solid #1a3a5c',
+          borderRadius: 6,
+          color: '#aaccdd',
+          fontSize: 12,
+          padding: '10px 12px',
+          resize: 'vertical',
+          outline: 'none',
+          fontFamily: 'inherit',
+          lineHeight: 1.6,
+        }}
+      />
+      {hasContent && !editing && (
+        <div
+          onClick={() => setEditing(true)}
+          style={{
+            fontSize: 12, color: '#aaccdd', cursor: 'pointer',
+            padding: '8px 0', whiteSpace: 'pre-wrap',
+            lineHeight: 1.6,
+          }}
+        >
+          {text.length > 200 ? text.slice(0, 200) + '...' : text}
+        </div>
+      )}
     </div>
   );
 }

@@ -14,10 +14,11 @@ const LABEL_MIN = 0.6;     // label has higher floor (always readable)
 interface ThinkerNodeProps {
   thinker: Thinker;
   isDeceased: boolean;
+  hasNotes: boolean;
   onClick: (thinker: Thinker) => void;
 }
 
-export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) {
+export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerNodeProps) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -52,6 +53,19 @@ export function ThinkerNode({ thinker, isDeceased, onClick }: ThinkerNodeProps) 
 
   return (
     <group ref={groupRef} position={position}>
+      {/* Note indicator ring — warm golden pulse for nodes with notes */}
+      {hasNotes && (
+        <mesh ref={noRaycast}>
+          <sphereGeometry args={[hovered ? outerGlowRadius * 1.6 : outerGlowRadius * 1.1, 32, 32]} />
+          <meshBasicMaterial
+            color="#ffd54f"
+            transparent
+            opacity={hovered ? 0.35 : 0.15}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
       {/* Outer glow — no raycast */}
       <mesh ref={noRaycast}>
         <sphereGeometry args={[hovered ? outerGlowRadius * 1.4 : outerGlowRadius, 32, 32]} />
