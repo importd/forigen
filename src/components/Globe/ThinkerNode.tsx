@@ -9,7 +9,6 @@ import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
 const REF_DISTANCE = 4.0;
 const NODE_MIN = 0.35;     // node can shrink a lot (distinguish countries)
 const NODE_MAX = 2.2;
-const LABEL_MIN = 0.6;     // label has higher floor (always readable)
 
 interface ThinkerNodeProps {
   thinker: Thinker;
@@ -35,21 +34,22 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerN
     if (el) el.raycast = () => {};
   }, []);
 
-  // Dynamic scaling: nodes and labels grow when far, shrink when near.
-  // Labels auto-show when zoomed in close enough (nodes spread out → no overlap).
+  // Node: grows when far (stays visible), shrinks when near (natural proportion).
+  // Label: inversely scaled — bigger when zoomed in, smaller when zoomed out.
+  // Shows on hover or when camera is close enough.
   useFrame(() => {
     if (!groupRef.current) return;
     const worldPos = new THREE.Vector3();
     groupRef.current.getWorldPosition(worldPos);
     const dist = camera.position.distanceTo(worldPos);
     const nodeScale = Math.max(NODE_MIN, Math.min(NODE_MAX, dist / REF_DISTANCE));
-    const labelScale = Math.max(LABEL_MIN, Math.min(NODE_MAX, dist / REF_DISTANCE));
+    // Label gets larger as you zoom in: 1.6 at close range, 0.4 at far range
+    const labelScale = Math.max(0.45, Math.min(1.6, REF_DISTANCE / dist));
 
     groupRef.current.scale.setScalar(nodeScale);
 
     if (labelRef.current) {
       labelRef.current.style.transform = `scale(${labelScale})`;
-      // Show label when zoomed in (camera close) or when hovering
       labelRef.current.style.display = (hovered || dist < 2.6) ? 'block' : 'none';
     }
   });
