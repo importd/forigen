@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { GlobeScene } from './components/Globe/GlobeScene';
 import { SearchBar } from './components/UI/SearchBar';
 import { Timeline } from './components/UI/Timeline';
@@ -18,8 +18,20 @@ function AppContent() {
 
   const { allThinkers, connections, filteredThinkers } = useData(timelineYear);
 
+  // When a thinker is selected, only show their connections
+  const displayConnections = useMemo(() => {
+    if (!selectedThinker) return connections;
+    return connections.filter(
+      conn => conn.from === selectedThinker.id || conn.to === selectedThinker.id
+    );
+  }, [connections, selectedThinker]);
+
   const handleSelectThinker = useCallback((thinker: Thinker) => {
     setSelectedThinker(thinker);
+  }, [setSelectedThinker]);
+
+  const handleDeselect = useCallback(() => {
+    setSelectedThinker(null);
   }, [setSelectedThinker]);
 
   const handleThinkerClick = useCallback((id: string) => {
@@ -34,10 +46,11 @@ function AppContent() {
       {/* 3D Globe */}
       <GlobeScene
         thinkers={filteredThinkers}
-        connections={connections}
+        connections={displayConnections}
         timelineYear={timelineYear}
         selectedThinker={selectedThinker}
         onSelectThinker={handleSelectThinker}
+        onDeselect={handleDeselect}
         hasNote={hasNote}
       />
 

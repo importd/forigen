@@ -14,6 +14,7 @@ interface GlobeSceneProps {
   timelineYear: number;
   selectedThinker: Thinker | null;
   onSelectThinker: (thinker: Thinker) => void;
+  onDeselect: () => void;
   hasNote: (id: string) => boolean;
 }
 
@@ -67,8 +68,9 @@ export function GlobeScene(props: GlobeSceneProps) {
   return (
     <Canvas
       style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
-      camera={{ position: [0, 1.5, 4], fov: 45 }}
+      camera={{ position: [2.0, 2.2, -0.5], fov: 45 }}
       gl={{ antialias: true, alpha: true }}
+      onPointerMissed={props.onDeselect}
     >
       <GlobeContent {...props} />
     </Canvas>
