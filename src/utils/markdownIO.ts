@@ -41,10 +41,10 @@ function thinkerToMarkdown(thinker: Thinker, note: string): string {
     '---',
   ].join('\n');
 
-  // Body: notes or placeholder
+  // Body: notes if present, otherwise empty
   const body = note.trim()
     ? `# ${thinker.name_zh} (${thinker.name})\n\n## 笔记 · Notes\n\n${note}`
-    : `# ${thinker.name_zh} (${thinker.name})\n\n> 暂无笔记 · No notes yet`;
+    : '';
 
   return `${frontmatter}\n\n${body}\n`;
 }
@@ -135,7 +135,12 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
 
   // Extract note from body — find the "## 笔记 · Notes" section
   const noteMatch = body.match(/##\s*笔记\s*·\s*Notes\s*\n([\s\S]*)$/);
-  const note = noteMatch ? noteMatch[1].trim() : body.trim();
+  let note = noteMatch ? noteMatch[1].trim() : body.trim();
+
+  // Filter out placeholder text from old exports
+  if (note === '> 暂无笔记 · No notes yet') {
+    note = '';
+  }
 
   return { metadata, note };
 }
