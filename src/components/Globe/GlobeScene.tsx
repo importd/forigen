@@ -5,6 +5,7 @@ import { EarthSphere } from './EarthSphere';
 import { Atmosphere } from './Atmosphere';
 import { ThinkerNode } from './ThinkerNode';
 import { ConnectionLines } from './ConnectionLines';
+import { CountryBorders } from './CountryBorders';
 import type { Thinker, Connection } from '../../types';
 
 interface GlobeSceneProps {
@@ -31,6 +32,7 @@ function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker }: 
       {/* Globe elements */}
       <EarthSphere />
       <Atmosphere />
+      <CountryBorders />
 
       {/* Connection arcs */}
       <ConnectionLines connections={connections} />
@@ -50,8 +52,8 @@ function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker }: 
         ref={controlsRef}
         enableDamping
         dampingFactor={0.1}
-        minDistance={2}
-        maxDistance={6}
+        minDistance={1.6}
+        maxDistance={8}
         target={[0, 0, 0]}
         enablePan={false}
       />
