@@ -43,8 +43,8 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick }: ThinkerN
     groupRef.current.getWorldPosition(worldPos);
     const dist = camera.position.distanceTo(worldPos);
     const nodeScale = Math.max(NODE_MIN, Math.min(NODE_MAX, dist / REF_DISTANCE));
-    // Label gets larger as you zoom in: 1.6 at close range, 0.4 at far range
-    const labelScale = Math.max(0.45, Math.min(1.6, REF_DISTANCE / dist));
+    // Label: far→bigger, near→smaller. Visible range 1.6~2.6 maps to 0.8~1.4
+    const labelScale = Math.min(1.4, Math.max(0.8, dist / 3.0));
 
     groupRef.current.scale.setScalar(nodeScale);
 
