@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -29,15 +29,15 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
   const color = getSchoolColor(thinker.school);
 
   const coreRadius = 0.025 + (thinker.influenced.length * 0.003);
+  const pinHeight = coreRadius * 8;
 
-  // Ink-dot layer radii
-  const bleedRadius = coreRadius * 3.5;
-  const spreadRadius = coreRadius * 2.4;
-  const inkCoreRadius = coreRadius;
-
-  // Highlighted boost
-  const hiBleedMult = highlighted ? 1.6 : 1;
-  const hiSpreadMult = highlighted ? 1.5 : 1;
+  // Quaternion to rotate the local Y axis to align with the surface normal (outward direction)
+  const pinQuaternion = useMemo(() => {
+    const normal = position.clone().normalize();
+    const q = new THREE.Quaternion();
+    q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
+    return q;
+  }, [position]);
 
   const noRaycast = useCallback((el: any) => {
     if (el) el.raycast = () => {};
@@ -61,80 +61,86 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
     }
   });
 
+  const pinHeadY = pinHeight / 2;
+
   return (
     <group ref={groupRef} position={position}>
-      {/* --- Ink bleed (largest halo) --- */}
+      {/* --- Subtle glow halo at the pin base --- */}
       <mesh ref={noRaycast}>
-        <sphereGeometry args={[bleedRadius * hiBleedMult, 32, 32]} />
+        <sphereGeometry args={[coreRadius * 2.5, 24, 24]} />
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={dimmed ? 0.005 : (highlighted ? 0.30 : (hovered ? 0.22 : 0.18))}
+          opacity={dimmed ? 0.01 : (highlighted ? 0.35 : (hovered ? 0.25 : 0.12))}
           depthWrite={false}
         />
       </mesh>
 
-      {/* --- Ink spread (medium halo) --- */}
-      <mesh ref={noRaycast}>
-        <sphereGeometry args={[spreadRadius * hiSpreadMult, 24, 24]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={dimmed ? 0.01 : (highlighted ? 0.45 : (hovered ? 0.32 : 0.22))}
-          depthWrite={false}
-        />
-      </mesh>
+      {/* --- Pin stem + head, oriented outward along the surface normal --- */}
+      <group quaternion={pinQuaternion}>
+        {/* Pin stem — thin vertical line from globe surface outward */}
+        <mesh ref={noRaycast}>
+          <cylinderGeometry args={[0.003, 0.003, pinHeight, 6]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={dimmed ? 0.05 : 0.5}
+            depthWrite={false}
+          />
+        </mesh>
 
-      {/* --- Ink core (solid dot, clickable) --- */}
-      <mesh
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick(thinker);
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={() => setHovered(false)}
-      >
-        <sphereGeometry args={[inkCoreRadius, 24, 24]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={dimmed ? 0.35 : (highlighted ? 0.95 : (isDeceased ? 0.70 : 0.95))}
-        />
-      </mesh>
-
-      {/* --- Label: italic Georgia/serif, handwritten feel --- */}
-      <Html
-        position={[0, coreRadius * 4.0, 0]}
-        center
-        style={{ pointerEvents: 'none' }}
-      >
-        <div
-          ref={labelRef}
-          style={{
-            fontFamily: "'Georgia', 'Noto Serif SC', serif",
-            color: highlighted ? '#9e2a2b' : color,
-            fontSize: '10px',
-            fontStyle: 'italic',
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-            lineHeight: 1.35,
-            pointerEvents: 'none',
-            display: 'none',
-            backgroundColor: highlighted ? 'rgba(242, 237, 228, 0.9)' : 'transparent',
-            padding: highlighted ? '1px 6px' : '0',
-            borderBottom: highlighted ? '1px solid #9e2a2b' : 'none',
-            borderRadius: highlighted ? '2px' : '0',
+        {/* Pin head — small colored dot at the tip */}
+        <mesh
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(thinker);
           }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+          }}
+          onPointerOut={() => setHovered(false)}
+          position={[0, pinHeadY, 0]}
         >
-          <div style={{ fontWeight: 'bold', fontSize: '10px' }}>{thinker.name_zh}</div>
-          <div style={{ fontSize: '8px', opacity: 0.75 }}>
-            {thinker.name} · {thinker.born}–{thinker.died}
+          <sphereGeometry args={[coreRadius * 1.5, 16, 16]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={dimmed ? 0.15 : (isDeceased ? 0.55 : 0.9)}
+            depthWrite={false}
+          />
+        </mesh>
+        {/* Label positioned above the pin head, oriented outward */}
+        <Html
+          position={[0, pinHeight + coreRadius * 2.5, 0]}
+          center
+          style={{ pointerEvents: 'none' }}
+        >
+          <div
+            ref={labelRef}
+            style={{
+              fontFamily: "'Georgia', 'Noto Serif SC', serif",
+              color: highlighted ? '#9e2a2b' : color,
+              fontSize: '10px',
+              fontStyle: 'italic',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              lineHeight: 1.35,
+              pointerEvents: 'none',
+              display: 'none',
+              backgroundColor: highlighted ? 'rgba(242, 237, 228, 0.9)' : 'transparent',
+              padding: highlighted ? '1px 6px' : '0',
+              borderBottom: highlighted ? '1px solid #9e2a2b' : 'none',
+              borderRadius: highlighted ? '2px' : '0',
+            }}
+          >
+            <div style={{ fontWeight: 'bold', fontSize: '10px' }}>{thinker.name_zh}</div>
+            <div style={{ fontSize: '8px', opacity: 0.75 }}>
+              {thinker.name} · {thinker.born}–{thinker.died}
+            </div>
           </div>
-        </div>
-      </Html>
+        </Html>
+      </group>
     </group>
   );
 }
