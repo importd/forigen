@@ -123,7 +123,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
   return (
     <div style={{
       fontSize: 10,
-      color: 'var(--text-muted)',
+      color: '#5a4a3a',
       fontFamily: 'var(--font-mono)',
     }}>
       {/* Era bar — equal-width segments for visual balance */}
@@ -167,7 +167,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
                 opacity: isActive ? 1 : 0.5,
               }} />
               <span style={{
-                color: isActive ? era.color : 'var(--text-secondary)',
+                color: isActive ? era.color : '#4a3a2a',
                 fontWeight: isActive ? 600 : 400,
                 fontSize: 10,
                 fontFamily: 'var(--font-body)',
@@ -175,7 +175,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
                 {era.zh}
               </span>
               <span style={{
-                color: 'var(--text-muted)',
+                color: '#5a4a3a',
                 fontSize: 8,
                 fontFamily: 'var(--font-mono)',
               }}>
@@ -198,7 +198,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
               onClick={() => onSelectEra(m.year)}
               style={{
                 fontSize: 9,
-                color: 'var(--text-muted)',
+                color: '#5a4a3a',
                 fontFamily: 'var(--font-mono)',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
@@ -206,8 +206,8 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
                 borderRadius: 3,
                 transition: 'color 0.15s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#3a2a1a'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#5a4a3a'; }}
               title={`点击跳转到 ${m.year}`}
             >
               {m.year} {m.label}
