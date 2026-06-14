@@ -60,7 +60,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
       fontFamily: 'var(--font-body)',
       zIndex: 10,
       overflowY: 'auto',
-      animation: 'slideIn 0.3s ease-out',
+      animation: 'fileSlideIn 0.25s cubic-bezier(0.3, 0, 1, 1)',
     }}>
       {/* Classified header strip */}
       <div style={{
@@ -135,7 +135,7 @@ export function DetailPanel({ thinker, onClose, onThinkerClick, allThinkers }: D
       <NoteEditor thinkerId={thinker.id} />
 
       <style>{`
-        @keyframes slideIn {
+        @keyframes fileSlideIn {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
         }

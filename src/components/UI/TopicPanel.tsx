@@ -49,7 +49,7 @@ export function TopicPanel({ thinkers, onThinkerClick }: TopicPanelProps) {
           fontFamily: 'var(--font-mono)',
           fontSize: 11,
           cursor: 'pointer',
-          transition: 'all 0.2s',
+          transition: 'background 0.1s, color 0.1s, border-color 0.1s',
         }}
       >
         <span style={{ fontSize: 14 }}>📋</span>
@@ -68,7 +68,7 @@ export function TopicPanel({ thinkers, onThinkerClick }: TopicPanelProps) {
           padding: '6px 0',
           width: 220,
           boxShadow: '0 4px 24px rgba(139, 115, 85, 0.2)',
-          animation: 'popIn 0.15s ease-out',
+          animation: 'stampDown 0.12s cubic-bezier(0.3, 0, 1, 1)',
           zIndex: 16,
         }}>
           {topics.map((topic, i) => {
@@ -111,9 +111,9 @@ export function TopicPanel({ thinkers, onThinkerClick }: TopicPanelProps) {
       )}
 
       <style>{`
-        @keyframes popIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes stampDown {
+          from { opacity: 0; transform: translateY(-2px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>

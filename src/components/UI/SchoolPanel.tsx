@@ -72,7 +72,7 @@ export function SchoolPanel({ thinkers, onThinkerClick: _onThinkerClick }: Schoo
           fontFamily: 'var(--font-mono)',
           fontSize: 11,
           cursor: 'pointer',
-          transition: 'all 0.2s',
+          transition: 'background 0.1s, color 0.1s, border-color 0.1s',
         }}
       >
         <span style={{ fontSize: 14 }}>🏛️</span>
@@ -99,7 +99,7 @@ export function SchoolPanel({ thinkers, onThinkerClick: _onThinkerClick }: Schoo
           width: 220,
           overflowY: 'auto',
           boxShadow: '0 4px 24px rgba(139, 115, 85, 0.2)',
-          animation: 'popIn 0.15s ease-out',
+          animation: 'stampDown 0.12s cubic-bezier(0.3, 0, 1, 1)',
           zIndex: 16,
         }}>
           {ERA_GROUPS.map((group) => {
@@ -159,7 +159,7 @@ export function SchoolPanel({ thinkers, onThinkerClick: _onThinkerClick }: Schoo
           borderRadius: '0 8px 8px 0',
           padding: '8px 12px',
           maxWidth: 320,
-          animation: 'slideIn 0.2s ease-out',
+          animation: 'stampDown 0.12s cubic-bezier(0.3, 0, 1, 1)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <span style={{ color: selected.color, fontWeight: 700, fontFamily: 'var(--font-body)', fontSize: 12 }}>{selected.zh}</span>
@@ -184,13 +184,9 @@ export function SchoolPanel({ thinkers, onThinkerClick: _onThinkerClick }: Schoo
       )}
 
       <style>{`
-        @keyframes popIn {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes stampDown {
+          from { opacity: 0; transform: translateY(-2px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>
