@@ -1,6 +1,103 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+/* ── Forigen · Classified Dossier Theme ── */
+:root {
+  /* Paper & Surface */
+  --paper: #f2ede4;
+  --surface: #e8e0d4;
+  --surface-hover: #ddd5c8;
+
+  /* Text */
+  --text-primary: #1a1a1a;
+  --text-secondary: #5a4a3a;
+  --text-muted: #8b7355;
+
+  /* Borders & Dividers */
+  --border: #c0b8ac;
+  --border-light: #d5cec0;
+
+  /* Accents */
+  --stamp-red: #9e2a2b;
+  --stamp-red-dim: rgba(158, 42, 43, 0.15);
+  --brass: #8b6f4e;
+  --ink-green: #4a6a5a;
+
+  /* Typography */
+  --font-display: 'Playfair Display', 'Noto Serif SC', serif;
+  --font-body: 'Georgia', 'Noto Serif SC', 'Times New Roman', serif;
+  --font-mono: 'Courier New', 'FangSong', 'SimFang', monospace;
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--text-primary);
+}
+
 body {
-  background: #0a0a1a;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Paper grain texture overlay */
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Vignette — darker at edges */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  box-shadow: inset 0 0 80px rgba(139, 115, 85, 0.1),
+              inset 0 0 8px rgba(139, 115, 85, 0.05);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--stamp-red-dim);
+  color: var(--text-primary);
+}
+
+/* ── Focus ── */
+:focus-visible {
+  outline: 1px solid var(--stamp-red);
+  outline-offset: 2px;
 }
