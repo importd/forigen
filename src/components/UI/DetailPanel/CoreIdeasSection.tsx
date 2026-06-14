@@ -11,8 +11,10 @@ interface CoreIdeasSectionProps {
 
 function IdeaCard({ slug, color, ideaDetails }: { slug: string; color: string; ideaDetails: Record<string, IdeaDetail> }) {
   const [expanded, setExpanded] = useState(false);
-  const label = IDEA_LABELS[slug];
+  const hardLabel = IDEA_LABELS[slug];
   const detail: IdeaDetail | undefined = ideaDetails[slug];
+  // Use markdown label as fallback when not in hardcoded IDEA_LABELS
+  const label = hardLabel || (detail ? { zh: detail.zh, en: slug } : null);
 
   if (!label) return null;
 
@@ -127,7 +129,9 @@ export function CoreIdeasSection({ thinker, color, ideaDetails }: CoreIdeasSecti
         /* Simple tags when no idea has detail data */
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {ideas.map((slug) => {
-            const label = IDEA_LABELS[slug];
+            const hardLabel = IDEA_LABELS[slug];
+            const detail = ideaDetails[slug];
+            const label = hardLabel || (detail ? { zh: detail.zh } : null);
             if (!label) return null;
             return (
               <span key={slug} style={{
