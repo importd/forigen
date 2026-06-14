@@ -23,21 +23,21 @@ function IdeaCard({ slug, color, ideaDetails }: { slug: string; color: string; i
         fontSize: 11,
         background: `${color}1a`,
         border: `1px solid ${color}33`,
-        color: '#aaccdd',
+        color: 'var(--text-primary)',
         padding: '3px 10px',
         borderRadius: 12,
         lineHeight: 1.5,
         cursor: 'default',
       }}>
-        {label.zh} · {label.en}
+        {label.zh}
       </span>
     );
   }
 
   return (
     <div style={{
-      background: '#0f1d2d',
-      border: `1px solid ${expanded ? color + '44' : '#1a2a3d'}`,
+      background: 'var(--paper)',
+      border: `1px solid ${expanded ? color + '44' : 'var(--border)'}`,
       borderRadius: 8,
       overflow: 'hidden',
       transition: 'border-color 0.2s',
@@ -56,15 +56,12 @@ function IdeaCard({ slug, color, ideaDetails }: { slug: string; color: string; i
             width: 4, height: 14, borderRadius: 2,
             background: color, flexShrink: 0,
           }} />
-          <span style={{ color: '#c8d6e0', fontSize: 12, fontWeight: 600 }}>
+          <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600 }}>
             {label.zh}
-          </span>
-          <span style={{ color: '#556677', fontSize: 10 }}>
-            {label.en}
           </span>
         </div>
         <span style={{
-          color: '#556677', fontSize: 10,
+          color: 'var(--text-muted)', fontSize: 10,
           transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
           transition: 'transform 0.2s',
         }}>
@@ -76,38 +73,34 @@ function IdeaCard({ slug, color, ideaDetails }: { slug: string; color: string; i
       {expanded && (
         <div style={{
           padding: '0 12px 12px',
-          borderTop: `1px solid #1a2a3d`,
+          borderTop: `1px solid var(--border)`,
           paddingTop: 10,
         }}>
-          <DetailRow label="概念界定" labelEn="What It Is" textZh={detail.definition_zh} textEn={detail.definition_en} color={color} />
-          <DetailRow label="思想渊源" labelEn="Where It Comes From" textZh={detail.origin_zh} textEn={detail.origin_en} color={color} />
-          <DetailRow label="理论流变" labelEn="How It Evolved" textZh={detail.evolution_zh} textEn={detail.evolution_en} color={color} />
-          <DetailRow label="常见误读" labelEn="Common Misconceptions" textZh={detail.misconception_zh} textEn={detail.misconception_en} color={color} />
+          <DetailRow label="概念界定" text={detail.definition_zh} color={color} />
+          <DetailRow label="思想渊源" text={detail.origin_zh} color={color} />
+          <DetailRow label="理论流变" text={detail.evolution_zh} color={color} />
+          <DetailRow label="常见误读" text={detail.misconception_zh} color={color} />
         </div>
       )}
     </div>
   );
 }
 
-function DetailRow({ label, labelEn, textZh, textEn, color }: {
-  label: string; labelEn: string;
-  textZh: string; textEn: string;
+function DetailRow({ label, text, color }: {
+  label: string;
+  text: string;
   color: string;
 }) {
   return (
     <div style={{ marginBottom: 10 }}>
       <div style={{
         fontSize: 12, fontWeight: 600, color,
-        marginBottom: 4, display: 'flex', alignItems: 'baseline', gap: 6,
+        marginBottom: 4,
       }}>
-        <span>{label}</span>
-        <span style={{ color: '#445566', fontSize: 10, fontWeight: 400 }}>{labelEn}</span>
+        {label}
       </div>
-      <div style={{ fontSize: 12, color: '#c8d6e0', lineHeight: 1.65, marginBottom: 3 }}>
-        {textZh}
-      </div>
-      <div style={{ fontSize: 11, color: '#667788', lineHeight: 1.55 }}>
-        {textEn}
+      <div style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.65 }}>
+        {text}
       </div>
     </div>
   );
@@ -141,11 +134,11 @@ export function CoreIdeasSection({ thinker, color, ideaDetails }: CoreIdeasSecti
                 fontSize: 11,
                 background: `${color}1a`,
                 border: `1px solid ${color}33`,
-                color: '#aaccdd',
+                color: 'var(--text-primary)',
                 padding: '3px 10px',
                 borderRadius: 12,
               }}>
-                {label.zh} · {label.en}
+                {label.zh}
               </span>
             );
           })}
@@ -156,7 +149,7 @@ export function CoreIdeasSection({ thinker, color, ideaDetails }: CoreIdeasSecti
         <div
           onClick={() => setShowAll(!showAll)}
           style={{
-            fontSize: 10, color: '#556677', cursor: 'pointer',
+            fontSize: 10, color: 'var(--text-muted)', cursor: 'pointer',
             textAlign: 'center', marginTop: 8, padding: '4px 0',
           }}
         >
@@ -167,16 +160,13 @@ export function CoreIdeasSection({ thinker, color, ideaDetails }: CoreIdeasSecti
   );
 }
 
-export function SectionLabel({ zh, en }: { zh: string; en: string }) {
+export function SectionLabel({ zh, en }: { zh: string; en?: string }) {
   return (
     <div style={{
-      fontSize: 10, color: '#556677', marginBottom: 10,
+      fontSize: 10, color: 'var(--text-muted)', marginBottom: 10,
       textTransform: 'uppercase', letterSpacing: 1,
-      display: 'flex', alignItems: 'center', gap: 8,
     }}>
-      <span>{zh}</span>
-      <span style={{ color: '#334455' }}>·</span>
-      <span style={{ color: '#445566', fontSize: 9 }}>{en}</span>
+      {en ? <span>{zh} <span style={{ color: 'var(--text-muted)' }}>·</span> <span style={{ color: 'var(--text-muted)', fontSize: 9 }}>{en}</span></span> : <span>{zh}</span>}
     </div>
   );
 }
