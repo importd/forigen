@@ -144,7 +144,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
               title={`${era.zh}（${era.start}–${era.end}）\n${count} 位思想家`}
               style={{
                 flex: 1,
-                background: isActive ? `${era.color}22` : 'transparent',
+                background: isActive ? 'var(--surface-hover)' : 'var(--surface)',
                 borderRight: '1px solid var(--border)',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -157,7 +157,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
                 onHoverEra?.(era.start, era.end);
               }}
               onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.background = 'transparent';
+                if (!isActive) e.currentTarget.style.background = 'var(--surface)';
                 onHoverEra?.(null, null);
               }}
             >
