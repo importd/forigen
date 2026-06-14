@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 
 interface TimelineProps {
   year: number;
@@ -28,6 +28,15 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
     ? maxYear
     : Math.round(Math.min(maxYear, year + halfRange));
 
+  const getStepSize = (y: number): number => {
+    if (y < 0) return 100;
+    if (y < 1500) return 50;
+    if (y < 1700) return 25;
+    if (y < 1800) return 10;
+    if (y < 1900) return 5;
+    if (y < 2000) return 2;
+    return 1;
+  };
   const step = useCallback((delta: number) => {
     onChange(Math.max(minYear, Math.min(maxYear, year + delta)));
   }, [year, minYear, maxYear, onChange]);
@@ -73,23 +82,53 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
     }
   }, [jumpInput, minYear, maxYear, onChange]);
 
-  // Adaptive tick marks based on zoom level
-  const tickInterval = [25, 10, 5, 5, 1, 1][zoomLevel];
-  const majorEvery = [2, 5, 5, 10, 5, 5][zoomLevel];
-  const marks: number[] = [];
-  for (let y = Math.ceil(sliderMin / tickInterval) * tickInterval; y <= sliderMax; y += tickInterval) {
-    marks.push(y);
-  }
+  // Adaptive tick marks — sparse in ancient, dense in modern
+  const marks = useMemo(() => {
+    const result: number[] = [];
+    let y = Math.floor(sliderMin);
+    while (y <= sliderMax) {
+      result.push(y);
+      let step = 200;
+      if (y < 0) step = 200;
+      else if (y < 500) step = 100;
+      else if (y < 1500) step = 100;
+      else if (y < 1700) step = 50;
+      else if (y < 1800) step = 25;
+      else if (y < 1900) step = 10;
+      else if (y < 2000) step = 5;
+      else step = 2;
+      step = Math.max(1, Math.round(step / (zoomLevel + 1)));
+      y += step;
+    }
+    return result;
+  }, [sliderMin, sliderMax, zoomLevel]);
+
+  // Determine if a mark is "major" (gets a year label)
+  const isMajorMark = (y: number): boolean => {
+    if (y < 0) return y % 200 === 0;
+    if (y < 1500) return y % 100 === 0;
+    if (y < 1800) return y % 50 === 0;
+    if (y < 1900) return y % 25 === 0;
+    if (y < 2000) return y % 10 === 0;
+    return y % 5 === 0;
+  };
+
+  const getTickSymbol = (y: number): string => {
+    if (y < 0) return y % 100 === 0 ? '|' : '·';
+    if (y < 1500) return y % 50 === 0 ? '|' : '·';
+    if (y < 1800) return y % 25 === 0 ? '|' : '·';
+    return y % 5 === 0 ? '|' : '·';
+  };
 
   const btnStyle = (active: boolean): React.CSSProperties => ({
     background: 'none',
-    border: '1px solid #1a3a5c',
+    border: '1px solid var(--border)',
     borderRadius: 3,
-    color: active ? '#4fc3f7' : '#556677',
+    color: active ? 'var(--stamp-red)' : 'var(--text-muted)',
     cursor: 'pointer',
     fontSize: 10,
     padding: '1px 6px',
-    fontFamily: 'inherit',
+    fontFamily: 'var(--font-mono)',
     lineHeight: '16px',
     userSelect: 'none',
   });
@@ -104,20 +143,20 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
         left: '50%',
         transform: 'translateX(-50%)',
         width: 'min(720px, 88vw)',
-        background: 'rgba(13, 26, 45, 0.92)',
-        border: '1px solid #1a3a5c',
+        background: 'rgba(242, 237, 228, 0.92)',
+        border: '1px solid var(--border)',
         borderRadius: 8,
         padding: '10px 18px 14px',
-        color: '#aaccdd',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        color: 'var(--text-primary)',
+        fontFamily: 'var(--font-body)',
         zIndex: 10,
       }}
     >
       {/* Top row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={() => step(-10)} style={btnStyle(false)} title="后退十年">⏮</button>
-          <button onClick={() => step(-1)} style={btnStyle(false)} title="后退一年">◀</button>
+          <button onClick={() => step(-getStepSize(year) * 10)} style={btnStyle(false)} title="大步后退">⏮</button>
+          <button onClick={() => step(-getStepSize(year))} style={btnStyle(false)} title="小步后退">◀</button>
         </div>
 
         <div style={{ textAlign: 'center' }}>
@@ -137,13 +176,13 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
                 width: 72,
                 fontSize: 16,
                 fontWeight: 'bold',
-                color: '#fff',
-                background: '#111d2d',
-                border: '1px solid #4fc3f7',
+                color: 'var(--text-primary)',
+                background: 'var(--paper)',
+                border: '1px solid var(--stamp-red)',
                 borderRadius: 4,
                 padding: '2px 8px',
                 textAlign: 'center',
-                fontFamily: 'inherit',
+                fontFamily: 'var(--font-mono)',
                 fontVariantNumeric: 'tabular-nums',
                 outline: 'none',
               }}
@@ -152,7 +191,8 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
             <span
               onClick={() => { setJumpInput(String(Math.round(year))); setShowJump(true); }}
               style={{
-                fontSize: 20, fontWeight: 'bold', color: '#fff',
+                fontSize: 20, fontWeight: 'bold', color: 'var(--text-primary)',
+                fontFamily: 'var(--font-display)',
                 fontVariantNumeric: 'tabular-nums',
                 cursor: 'pointer', userSelect: 'none',
               }}
@@ -162,23 +202,23 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
             </span>
           )}
           {thinkerCount !== undefined && (
-            <span style={{ fontSize: 11, color: '#556677', fontWeight: 'normal', marginLeft: 6 }}>
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontWeight: 'normal', marginLeft: 6 }}>
               {thinkerCount} 人
             </span>
           )}
           {zoomLevel > 0 && (
-            <span style={{ fontSize: 9, color: '#4fc3f7', marginLeft: 6 }}>
+            <span style={{ fontSize: 9, color: 'var(--stamp-red)', fontFamily: 'var(--font-mono)', marginLeft: 6 }}>
               ±{halfRange}y
             </span>
           )}
         </div>
 
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <button onClick={() => step(1)} style={btnStyle(false)} title="前进一年">▶</button>
-          <button onClick={() => step(10)} style={btnStyle(false)} title="前进十年">⏭</button>
+          <button onClick={() => step(getStepSize(year))} style={btnStyle(false)} title="小步前进">▶</button>
+          <button onClick={() => step(getStepSize(year) * 10)} style={btnStyle(false)} title="大步前进">⏭</button>
           <span style={{ width: 6 }} />
           <span
-            style={{ fontSize: 10, color: '#556677', cursor: 'pointer', userSelect: 'none' }}
+            style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', cursor: 'pointer', userSelect: 'none' }}
             onClick={() => setSpeed((s) => (s % 5) + 1)}
             title="切换播放速度"
           >
@@ -187,13 +227,14 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
           <button
             onClick={togglePlay}
             style={{
-              background: isPlaying ? '#ff7043' : '#1a3a5c',
-              border: '1px solid #334455',
+              background: isPlaying ? 'var(--stamp-red)' : 'var(--surface-hover)',
+              border: '1px solid var(--border)',
               borderRadius: 4,
-              color: '#fff',
+              color: 'var(--text-primary)',
               padding: '2px 10px',
               cursor: 'pointer',
               fontSize: 12,
+              fontFamily: 'var(--font-mono)',
             }}
           >
             {isPlaying ? '⏸' : '▶'}
@@ -205,13 +246,13 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
       <div style={{ position: 'relative', height: 22, display: 'flex', alignItems: 'center' }}>
         <div style={{
           position: 'absolute', left: 0, right: 0, height: 2,
-          background: '#1a3a5c', borderRadius: 1,
+          background: 'var(--border)', borderRadius: 1,
         }} />
         <div style={{
           position: 'absolute', left: 0,
           width: `${((year - sliderMin) / (sliderMax - sliderMin)) * 100}%`,
           height: 2,
-          background: '#4fc3f7',
+          background: 'var(--stamp-red)',
           borderRadius: 1,
         }} />
         <input
@@ -229,24 +270,25 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
         />
       </div>
 
-      {/* Tick marks — adaptive density */}
+      {/* Tick marks — adaptive density: sparse in ancient, dense in modern */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, position: 'relative' }}>
-        {marks.map((m, i) => {
-          const isMajor = i % majorEvery === 0;
+        {marks.map((m) => {
+          const major = isMajorMark(m);
           const near = Math.abs(year - m) < (halfRange < 20 ? 1 : halfRange < 80 ? 2 : 5);
           return (
             <span
               key={m}
               onClick={() => onChange(m)}
               style={{
-                fontSize: isMajor ? 10 : 7,
-                color: near ? '#4fc3f7' : isMajor ? '#556677' : '#334455',
+                fontSize: major ? 9 : 6,
+                color: near ? 'var(--stamp-red)' : major ? 'var(--text-muted)' : 'var(--border)',
+                fontFamily: 'var(--font-mono)',
                 cursor: 'pointer',
                 userSelect: 'none',
                 fontWeight: near ? 'bold' : 'normal',
               }}
             >
-              {isMajor ? m : (halfRange < 40 ? '│' : '')}
+              {major ? m : getTickSymbol(m)}
             </span>
           );
         })}
@@ -254,7 +296,7 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
 
       {/* Hint */}
       {zoomLevel === 0 && (
-        <div style={{ textAlign: 'center', marginTop: 3, fontSize: 8, color: '#334455' }}>
+        <div style={{ textAlign: 'center', marginTop: 3, fontSize: 8, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
           滚轮缩放 · Scroll to zoom
         </div>
       )}
@@ -264,8 +306,8 @@ export function Timeline({ year, onChange, thinkerCount, minYear = 1700, maxYear
           -webkit-appearance: none;
           width: 14px; height: 14px;
           border-radius: 50%;
-          background: #4fc3f7;
-          border: 2px solid #0a0a1a;
+          background: var(--stamp-red);
+          border: 2px solid var(--paper);
           cursor: pointer;
           margin-top: -6px;
         }
