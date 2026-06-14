@@ -34,7 +34,7 @@ export function KeyWorksSection({ thinker, color }: KeyWorksSectionProps) {
         {/* Timeline bar */}
         <div style={{
           position: 'absolute', left: 0, top: 6, bottom: 6,
-          width: 1, background: '#1a2a3d',
+          width: 1, background: 'var(--border)',
         }} />
 
         {works.map((work, i) => {
@@ -57,10 +57,10 @@ export function KeyWorksSection({ thinker, color }: KeyWorksSectionProps) {
               </span>
               {/* Title */}
               <div style={{ display: 'inline' }}>
-                <span style={{ color: '#c8d6e0', fontSize: 12, fontWeight: 500 }}>
+                <span style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 500 }}>
                   {work.title_zh}
                 </span>
-                <span style={{ color: '#556677', fontSize: 10, marginLeft: 6 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 10, marginLeft: 6 }}>
                   {work.title}
                 </span>
               </div>
@@ -68,8 +68,8 @@ export function KeyWorksSection({ thinker, color }: KeyWorksSectionProps) {
               {theme && (
                 <div style={{ marginTop: 2, marginLeft: 0 }}>
                   <span style={{
-                    fontSize: 9, color: '#445566',
-                    background: '#0f1d2d',
+                    fontSize: 9, color: 'var(--text-muted)',
+                    background: 'var(--surface-hover)',
                     padding: '1px 6px', borderRadius: 3,
                   }}>
                     {theme.zh} · {theme.en}
