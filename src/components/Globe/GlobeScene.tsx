@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { EarthSphere } from './EarthSphere';
 import { Atmosphere } from './Atmosphere';
 import { ThinkerNode } from './ThinkerNode';
@@ -16,20 +16,18 @@ interface GlobeSceneProps {
   onSelectThinker: (thinker: Thinker) => void;
   onDeselect: () => void;
   hasNote: (id: string) => boolean;
+  highlightedIds?: Set<string>;
 }
 
-function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker, hasNote }: GlobeSceneProps) {
+function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker, hasNote, highlightedIds }: GlobeSceneProps) {
   const controlsRef = useRef<any>(null);
 
   return (
     <>
-      {/* Background stars */}
-      <Stars radius={100} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
-
-      {/* Lighting — ambient for dark-side visibility, directional for texture definition */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 3, 5]} intensity={0.8} />
-      <directionalLight position={[-3, -1, -3]} intensity={0.25} />
+      {/* Warm lighting — sepia-toned ambient and directional */}
+      <ambientLight intensity={0.5} color="#f5e6d3" />
+      <directionalLight position={[5, 3, 5]} intensity={0.7} color="#ffe0c0" />
+      <directionalLight position={[-3, -1, -3]} intensity={0.2} color="#d4b896" />
 
       {/* Globe elements */}
       <EarthSphere />
@@ -40,22 +38,28 @@ function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker, ha
       <ConnectionLines connections={connections} />
 
       {/* Thinker nodes */}
-      {thinkers.map((thinker) => (
-        <ThinkerNode
-          key={thinker.id}
-          thinker={thinker}
-          isDeceased={thinker.died < timelineYear}
-          hasNotes={hasNote(thinker.id)}
-          onClick={onSelectThinker}
-        />
-      ))}
+      {thinkers.map((thinker) => {
+        const isHighlighted = highlightedIds?.has(thinker.id) ?? false;
+        const isDimmed = highlightedIds && highlightedIds.size > 0 && !isHighlighted;
+        return (
+          <ThinkerNode
+            key={thinker.id}
+            thinker={thinker}
+            isDeceased={thinker.died < timelineYear}
+            hasNotes={hasNote(thinker.id)}
+            onClick={onSelectThinker}
+            highlighted={isHighlighted}
+            dimmed={isDimmed}
+          />
+        );
+      })}
 
       {/* Controls */}
       <OrbitControls
         ref={controlsRef}
         enableDamping
         dampingFactor={0.1}
-        minDistance={1.6}
+        minDistance={0.9}
         maxDistance={8}
         target={[0, 0, 0]}
         enablePan={false}
@@ -67,7 +71,7 @@ function GlobeContent({ thinkers, connections, timelineYear, onSelectThinker, ha
 export function GlobeScene(props: GlobeSceneProps) {
   return (
     <Canvas
-      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}
       camera={{ position: [2.0, 2.2, -0.5], fov: 45 }}
       gl={{ antialias: true, alpha: true }}
       onPointerMissed={props.onDeselect}
