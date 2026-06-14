@@ -20,15 +20,15 @@ export function BranchTheories({ school, color, schoolTheories }: BranchTheories
 
   return (
     <div style={{ padding: '0 20px 16px' }}>
-      <SectionLabel zh="学派理论模块" en="School Theory Modules" />
+      <SectionLabel zh="学派理论模块" />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {theories.map((theory) => {
           const open = !!expanded[theory.slug];
           return (
             <div key={theory.slug} style={{
-              background: '#0f1d2d',
-              border: `1px solid ${open ? color + '44' : '#1a2a3d'}`,
+              background: 'var(--paper)',
+              border: `1px solid ${open ? color + '44' : 'var(--border)'}`,
               borderRadius: 8,
               overflow: 'hidden',
               transition: 'border-color 0.2s',
@@ -44,15 +44,12 @@ export function BranchTheories({ school, color, schoolTheories }: BranchTheories
               >
                 <span style={{ fontSize: 16, flexShrink: 0 }}>{theory.icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ color: '#c8d6e0', fontSize: 12, fontWeight: 600 }}>
+                  <div style={{ color: 'var(--text-primary)', fontSize: 12, fontWeight: 600 }}>
                     {theory.zh}
-                  </div>
-                  <div style={{ color: '#556677', fontSize: 10 }}>
-                    {theory.en}
                   </div>
                 </div>
                 <span style={{
-                  color: '#556677', fontSize: 10,
+                  color: 'var(--text-muted)', fontSize: 10,
                   transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
                   transition: 'transform 0.2s',
                 }}>
@@ -64,14 +61,11 @@ export function BranchTheories({ school, color, schoolTheories }: BranchTheories
               {open && (
                 <div style={{
                   padding: '0 12px 12px',
-                  borderTop: `1px solid #1a2a3d`,
+                  borderTop: `1px solid var(--border)`,
                   paddingTop: 10,
                 }}>
-                  <div style={{ fontSize: 11, color: '#99aabb', lineHeight: 1.6, marginBottom: 4 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                     {theory.desc_zh}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#556677', lineHeight: 1.5 }}>
-                    {theory.desc_en}
                   </div>
                 </div>
               )}
