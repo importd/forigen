@@ -33,7 +33,7 @@ export function SearchBar({ thinkers, onSelect, query, onQueryChange }: SearchBa
       left: 24,
       width: '280px',
       zIndex: 20,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontFamily: 'var(--font-body)',
     }}>
       <div style={{ position: 'relative' }}>
         <input
@@ -42,14 +42,15 @@ export function SearchBar({ thinkers, onSelect, query, onQueryChange }: SearchBa
           onChange={(e) => onQueryChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 200)}
-          placeholder="🔍 搜索人物、著作、思想..."
+          placeholder="> SEARCH THINKER... _"
           style={{
             width: '100%',
             padding: '10px 16px',
-            background: 'rgba(13, 26, 45, 0.92)',
-            border: '1px solid #1a3a5c',
+            background: 'rgba(242, 237, 228, 0.95)',
+            border: '1px solid var(--border)',
             borderRadius: 8,
-            color: '#fff',
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-mono)',
             fontSize: 14,
             outline: 'none',
             transition: 'border-color 0.2s',
@@ -67,15 +68,15 @@ export function SearchBar({ thinkers, onSelect, query, onQueryChange }: SearchBa
             top: '100%',
             left: 0, right: 0,
             marginTop: 4,
-            background: '#0d1a2d',
-            border: '1px solid #1a3a5c',
+            background: 'var(--paper)',
+            border: '1px solid var(--border)',
             borderRadius: 8,
             overflow: 'hidden',
             maxHeight: 320,
             overflowY: 'auto',
           }}>
             {results.length === 0 ? (
-              <div style={{ padding: 16, color: '#667788', fontSize: 13, textAlign: 'center' }}>
+              <div style={{ padding: 16, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 13, textAlign: 'center' }}>
                 No results found
               </div>
             ) : (
@@ -89,20 +90,20 @@ export function SearchBar({ thinkers, onSelect, query, onQueryChange }: SearchBa
                   style={{
                     padding: '10px 16px',
                     cursor: 'pointer',
-                    borderBottom: '1px solid #1a3a5c',
+                    borderBottom: '1px solid var(--border-light)',
                     transition: 'background 0.15s',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#1a2a3d')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div>
-                    <div style={{ color: '#fff', fontSize: 13 }}>{t.name_zh}</div>
-                    <div style={{ color: '#667788', fontSize: 11 }}>{t.name} · {t.born}–{t.died}</div>
+                    <div style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-body)', fontSize: 13 }}>{t.name_zh}</div>
+                    <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{t.name} · {t.born}–{t.died}</div>
                   </div>
-                  <div style={{ color: '#556677', fontSize: 11 }}>{t.school}</div>
+                  <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 11 }}>{t.school}</div>
                 </div>
               ))
             )}
