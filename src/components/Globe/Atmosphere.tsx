@@ -28,11 +28,22 @@ export function Atmosphere() {
         fragmentShader={/* glsl */ `
           varying vec3 vNormal;
           varying vec3 vPosition;
+
+          vec3 sepiaWarmColor(float t) {
+            return mix(
+              vec3(0.82, 0.70, 0.55),
+              vec3(0.60, 0.52, 0.42),
+              t
+            );
+          }
+
           void main() {
             vec3 viewDir = normalize(cameraPosition - vPosition);
             float intensity = 1.0 - abs(dot(vNormal, viewDir));
-            intensity = pow(intensity, 3.0);
-            gl_FragColor = vec4(0.31, 0.76, 0.97, intensity * 0.35);
+            intensity = pow(intensity, 2.5);
+            float alpha = intensity * 0.28;
+            vec3 color = sepiaWarmColor(intensity);
+            gl_FragColor = vec4(color, alpha);
           }
         `}
       />
