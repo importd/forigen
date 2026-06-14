@@ -52,7 +52,7 @@ export function TopicPanel({ thinkers, onThinkerClick }: TopicPanelProps) {
           transition: 'background 0.1s, color 0.1s, border-color 0.1s',
         }}
       >
-        <span style={{ fontSize: 14 }}>📋</span>
+        <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', letterSpacing: 0.5 }}>[议题]</span>
         <span>{selected ? selected.zh : '核心议题'}</span>
         <span style={{ color: 'var(--text-muted)', fontSize: 9, marginLeft: 2 }}>{open ? '▲' : '▼'}</span>
       </button>

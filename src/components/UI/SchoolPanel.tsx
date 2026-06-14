@@ -75,7 +75,7 @@ export function SchoolPanel({ thinkers, onThinkerClick: _onThinkerClick }: Schoo
           transition: 'background 0.1s, color 0.1s, border-color 0.1s',
         }}
       >
-        <span style={{ fontSize: 14 }}>🏛️</span>
+        <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', letterSpacing: 0.5 }}>[流派]</span>
         <span>{selected ? selected.zh : '学派筛选'}</span>
         {selected && (
           <>
