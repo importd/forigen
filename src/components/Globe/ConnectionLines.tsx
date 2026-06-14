@@ -55,7 +55,7 @@ function FlowSegment({ curve, color, zoomRef }: {
     }
 
     lineRef.current.geometry.attributes.position.needsUpdate = true;
-    lineRef.current.material.opacity = 0.4 * zoomRef.current;
+    lineRef.current.material.opacity = 0.8 * zoomRef.current;
   });
 
   return (
@@ -84,7 +84,7 @@ function SolidArc({ points, color, zoomRef }: {
 
   useFrame(() => {
     if (lineRef.current) {
-      lineRef.current.material.opacity = 0.25 * zoomRef.current;
+      lineRef.current.material.opacity = 0.45 * zoomRef.current;
     }
   });
 
@@ -111,23 +111,22 @@ export function ConnectionLines({ connections }: ConnectionLinesProps) {
       const mid = midPoint(from, to, 0.35, GLOBE_RADIUS);
       const curve = new THREE.QuadraticBezierCurve3(from.clone(), mid, to.clone());
       const points = curve.getPoints(40);
+      const sc = getSchoolColor(conn.school);
       return {
         id: conn.id,
         points,
         curve,
-        color: '#7a6a54',      // muted brown for solid arc
-        flowColor: getSchoolColor(conn.school), // colored flow shows influence direction
+        solidColor: sc,           // dim solid arc — school color
+        flowColor: '#ffcc80',     // warm amber flow — direction indicator
       };
     });
   }, [connections]);
 
   return (
     <group>
-      {arcs.map(({ id, points, curve, color, flowColor }) => (
+      {arcs.map(({ id, points, curve, solidColor, flowColor }) => (
         <group key={id}>
-          {/* Solid dim line — fades with zoom */}
-          <SolidArc points={points} color={color} zoomRef={zoomRef} />
-          {/* Bright segment sliding along the curve → shows direction, also fades */}
+          <SolidArc points={points} color={solidColor} zoomRef={zoomRef} />
           <FlowSegment curve={curve} color={flowColor} zoomRef={zoomRef} />
         </group>
       ))}

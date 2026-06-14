@@ -6,11 +6,12 @@ import type { IdeaDetail } from '../data/ideaDetails';
 import type { TheoryModule } from '../data/schoolTheories';
 
 const NOTES_KEY = 'forigen-notes';
+const TOPIC_KEY = 'forigen-selected-topic';
 const CUSTOM_KEY = 'forigen-custom-thinkers';
 const LABELS_KEY = 'forigen-custom-labels';
 const IDEA_DETAILS_KEY = 'forigen-custom-idea-details';
 const SCHOOL_THEORIES_KEY = 'forigen-custom-school-theories';
-const INITIAL_YEAR = 1850;
+const INITIAL_YEAR = 2026;
 
 function loadJSON<T>(key: string, fallback: T): T {
   try {
@@ -49,6 +50,8 @@ interface AppContextType {
   notes: Record<string, string>;
   getNote: (id: string) => string;
   setNote: (id: string, content: string) => void;
+  selectedTopic: string | null;
+  setSelectedTopic: (topic: string | null) => void;
   hasNote: (id: string) => boolean;
   customThinkers: Thinker[];
   upsertCustomThinker: (thinker: Thinker) => void;
@@ -58,6 +61,7 @@ interface AppContextType {
   mergeIdeaDetails: (details: Record<string, IdeaDetail>) => void;
   customSchoolTheories: Record<string, TheoryModule[]>;
   mergeSchoolTheories: (theories: Record<string, TheoryModule[]>) => void;
+  mergeSeedNotes: (incoming: Record<string, string>) => void;
 }
 
 const AppContext = createContext<AppContextType | null>(null);
@@ -71,6 +75,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [customLabels, setCustomLabels] = useState<CustomLabels>(() => loadJSON(LABELS_KEY, EMPTY_LABELS));
   const [customIdeaDetails, setCustomIdeaDetails] = useState<Record<string, IdeaDetail>>(() => loadJSON(IDEA_DETAILS_KEY, {}));
   const [customSchoolTheories, setCustomSchoolTheories] = useState<Record<string, TheoryModule[]>>(() => loadJSON(SCHOOL_THEORIES_KEY, {}));
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(() => loadJSON(TOPIC_KEY, null));
 
   const getNote = useCallback((id: string) => notes[id] || '', [notes]);
   const hasNote = useCallback((id: string) => !!notes[id]?.trim(), [notes]);
@@ -139,6 +144,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const handleSetSelectedTopic = useCallback((topic: string | null) => {
+    setSelectedTopic(topic);
+    saveJSON(TOPIC_KEY, topic);
+  }, []);
+
+  // Only fill in seed notes for IDs that have no existing localStorage note
+  const mergeSeedNotes = useCallback((incoming: Record<string, string>) => {
+    setNotes((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const [id, content] of Object.entries(incoming)) {
+        if (!prev[id]?.trim()) {
+          next[id] = content;
+          changed = true;
+        }
+      }
+      if (changed) saveJSON(NOTES_KEY, next);
+      return changed ? next : prev;
+    });
+  }, []);
+
   const value = useMemo(() => ({
     timelineYear, setTimelineYear,
     selectedThinker, setSelectedThinker,
@@ -148,7 +174,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     customLabels, mergeLabels,
     customIdeaDetails, mergeIdeaDetails,
     customSchoolTheories, mergeSchoolTheories,
-  }), [timelineYear, selectedThinker, searchQuery, notes, getNote, setNote, hasNote, customThinkers, upsertCustomThinker, customLabels, mergeLabels, customIdeaDetails, mergeIdeaDetails, customSchoolTheories, mergeSchoolTheories]);
+    mergeSeedNotes,
+    selectedTopic, setSelectedTopic: handleSetSelectedTopic,
+  }), [timelineYear, selectedThinker, searchQuery, notes, getNote, setNote, hasNote, customThinkers, upsertCustomThinker, customLabels, mergeLabels, customIdeaDetails, mergeIdeaDetails, customSchoolTheories, mergeSchoolTheories, mergeSeedNotes, selectedTopic, handleSetSelectedTopic]);
 
   return (
     <AppContext.Provider value={value}>

@@ -45,13 +45,9 @@ function thinkerToMarkdown(
       }
       if (detail) {
         lines.push(`    definition: "${detail.definition_zh.replace(/"/g, '\\"')}"`);
-        lines.push(`    definition_en: "${detail.definition_en.replace(/"/g, '\\"')}"`);
         lines.push(`    origin: "${detail.origin_zh.replace(/"/g, '\\"')}"`);
-        lines.push(`    origin_en: "${detail.origin_en.replace(/"/g, '\\"')}"`);
         lines.push(`    evolution: "${detail.evolution_zh.replace(/"/g, '\\"')}"`);
-        lines.push(`    evolution_en: "${detail.evolution_en.replace(/"/g, '\\"')}"`);
         lines.push(`    misconception: "${detail.misconception_zh.replace(/"/g, '\\"')}"`);
-        lines.push(`    misconception_en: "${detail.misconception_en.replace(/"/g, '\\"')}"`);
       }
       return lines.join('\n');
     })
@@ -68,7 +64,6 @@ function thinkerToMarkdown(
             `    zh: "${t.zh}"`,
             `    en: "${t.en}"`,
             `    desc_zh: "${t.desc_zh.replace(/"/g, '\\"')}"`,
-            `    desc_en: "${t.desc_en.replace(/"/g, '\\"')}"`,
             `    icon: "${t.icon}"`,
           ].join('\n')
         )
@@ -98,9 +93,14 @@ function thinkerToMarkdown(
     ),
     `influenced_by: [${thinker.influencedBy.map((s) => `"${s}"`).join(', ')}]`,
     `influenced: [${thinker.influenced.map((s) => `"${s}"`).join(', ')}]`,
+    ...(thinker.influenceNotes && Object.keys(thinker.influenceNotes).length > 0
+      ? [`influence_notes:`, ...Object.entries(thinker.influenceNotes).map(([k, v]) => `  ${k}: "${v.replace(/"/g, '\\"')}"`)]
+      : []),
+    ...(thinker.influenceEvidence ? [`influence_evidence: "${thinker.influenceEvidence.replace(/"/g, '\\"')}"`] : []),
     `core_ideas:`,
     coreIdeasYaml,
     ...(schoolTheoriesYaml ? ['school_theories:', schoolTheoriesYaml] : []),
+    ...(thinker.marxConnection ? [`marx_connection: "${thinker.marxConnection.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`] : []),
     '---',
   ].join('\n');
 
@@ -115,7 +115,7 @@ function thinkerToMarkdown(
 /**
  * Parse a Markdown file back into thinker metadata and note content.
  */
-function markdownToData(md: string): { metadata: Record<string, any>; note: string } | null {
+export function markdownToData(md: string): { metadata: Record<string, any>; note: string } | null {
   const match = md.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) {
     // No frontmatter — treat entire content as a note (no metadata)
@@ -129,10 +129,22 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
   const lines = yamlStr.split('\n');
   let currentKey: string | null = null;
   let inList = false;
+  let inMap = false;
   let listItems: any[] = [];
+  let mapItems: Record<string, string> = {};
 
   for (const line of lines) {
     if (line.trim() === '') continue;
+
+    // Indented map entry (e.g. influence_notes: \n  hegel: "...")
+    if (inMap && line.startsWith('  ') && !line.startsWith('  - ')) {
+      const trimmed = line.trim();
+      const kv = trimmed.match(/^([\w-]+):\s*["']?(.*?)["']?$/);
+      if (kv) {
+        mapItems[kv[1]] = kv[2].replace(/\\"/g, '"');
+      }
+      continue;
+    }
 
     // List item (indented)
     if (line.startsWith('  - ') || line.startsWith('    ')) {
@@ -194,11 +206,16 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
       continue;
     }
 
-    // Flush list
+    // Flush list or map
     if (inList && currentKey) {
       (metadata as any)[currentKey] = listItems;
       listItems = [];
       inList = false;
+    }
+    if (inMap && currentKey) {
+      (metadata as any)[currentKey] = mapItems;
+      mapItems = {};
+      inMap = false;
     }
 
     // Key-value line
@@ -206,6 +223,12 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
     if (kv) {
       currentKey = kv[1];
       let value: any = kv[2].trim();
+
+      // Detect indented map keys (like influence_notes:)
+      if (currentKey === 'influence_notes' && value === '') {
+        inMap = true;
+        continue;
+      }
 
       if (value.startsWith('[') && value.endsWith(']')) {
         // Array
@@ -227,6 +250,10 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
   if (inList && currentKey) {
     (metadata as any)[currentKey] = listItems;
   }
+  // Flush final map
+  if (inMap && currentKey) {
+    (metadata as any)[currentKey] = mapItems;
+  }
 
   // Extract note from body — find the "## 笔记 · Notes" section
   const noteMatch = body.match(/##\s*笔记\s*·\s*Notes\s*\n([\s\S]*)$/);
@@ -241,7 +268,7 @@ function markdownToData(md: string): { metadata: Record<string, any>; note: stri
 }
 
 /** Convert parsed frontmatter metadata to a Thinker object */
-function metadataToThinker(metadata: Record<string, any>): Thinker | null {
+export function metadataToThinker(metadata: Record<string, any>): Thinker | null {
   if (!metadata.id || !metadata.name) return null;
 
   const keyWorks = (metadata.key_works || []).map((w: any) => ({
@@ -269,6 +296,9 @@ function metadataToThinker(metadata: Record<string, any>): Thinker | null {
     influenced: Array.isArray(metadata.influenced) ? metadata.influenced : [],
     coreIdeas,
     hasNotes: false,
+    marxConnection: metadata.marx_connection || undefined,
+    influenceEvidence: metadata.influence_evidence || undefined,
+    influenceNotes: metadata.influence_notes || undefined,
   };
 }
 
@@ -312,7 +342,7 @@ interface ExtractedData {
   schoolTheories: Record<string, any[]>;
 }
 
-function extractLabels(metadata: Record<string, any>): ExtractedData {
+export function extractLabels(metadata: Record<string, any>): ExtractedData {
   const result: ExtractedData = {
     schools: {},
     regions: {},
@@ -358,19 +388,14 @@ function extractLabels(metadata: Record<string, any>): ExtractedData {
           };
         }
         // Extract detail fields if present
-        if (slug && (idea.definition || idea.definition_en)) {
+        if (slug && idea.definition) {
           result.ideaDetails[slug] = {
             slug,
             zh: label || idea.zh || slug,
-            en: labelEn || idea.en || slug,
             definition_zh: idea.definition || '',
-            definition_en: idea.definition_en || '',
             origin_zh: idea.origin || '',
-            origin_en: idea.origin_en || '',
             evolution_zh: idea.evolution || '',
-            evolution_en: idea.evolution_en || '',
             misconception_zh: idea.misconception || '',
-            misconception_en: idea.misconception_en || '',
           };
         }
       }

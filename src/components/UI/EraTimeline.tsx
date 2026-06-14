@@ -104,8 +104,6 @@ const ERAS: Era[] = [
 ];
 
 interface EraTimelineProps {
-  minYear: number;
-  maxYear: number;
   currentYear: number;
   onSelectEra: (year: number) => void;
   onSelectEraToggle: (start: number, end: number) => void;
@@ -113,7 +111,7 @@ interface EraTimelineProps {
   thinkerCountByEra: Record<number, number>;
 }
 
-export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onSelectEraToggle, selectedEra, thinkerCountByEra }: EraTimelineProps) {
+export function EraTimeline({ currentYear, onSelectEra, onSelectEraToggle, selectedEra, thinkerCountByEra }: EraTimelineProps) {
   const activeEra = useMemo(() => {
     for (const era of ERAS) {
       if (currentYear >= era.start && currentYear <= era.end) return era;
@@ -135,7 +133,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onSele
         overflow: 'hidden',
         border: '1px solid var(--border)',
       }}>
-        {ERAS.map((era, i) => {
+        {ERAS.map((era) => {
           const isActive = activeEra?.zh === era.zh;
           const isSelected = selectedEra?.start === era.start && selectedEra?.end === era.end;
           const count = thinkerCountByEra[era.end] || 0;

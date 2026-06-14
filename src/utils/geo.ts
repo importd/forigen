@@ -34,3 +34,12 @@ export function midPoint(
 }
 
 export const GLOBE_RADIUS = 1.5;
+
+/** Deterministic jitter (±0.3°) for thinkers sharing the same geo coordinates. */
+export function jitterCoords(id: string, lat: number, lng: number): { lat: number; lng: number } {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = ((hash << 5) - hash) + id.charCodeAt(i) | 0;
+  const jLat = (hash % 7 - 3) * 0.1;
+  const jLng = ((hash >> 8) % 7 - 3) * 0.1;
+  return { lat: lat + jLat, lng: lng + jLng };
+}

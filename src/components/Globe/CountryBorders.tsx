@@ -53,9 +53,9 @@ export function CountryBorders({ dataUrl = import.meta.env.BASE_URL + 'data/coun
           const geom = new THREE.BufferGeometry();
           geom.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
           const mat = new THREE.LineBasicMaterial({
-            color: '#8b6f4e',
+            color: '#5a4a3a',
             transparent: true,
-            opacity: 0.3,
+            opacity: 0.35,
             depthTest: true,
             depthWrite: false,
           });

@@ -1,4 +1,5 @@
 import type { Thinker, Connection } from '../types';
+import { jitterCoords } from './geo';
 
 export function buildConnections(thinkers: Thinker[]): Connection[] {
   const thinkerMap = new Map(thinkers.map(t => [t.id, t]));
@@ -13,14 +14,16 @@ export function buildConnections(thinkers: Thinker[]): Connection[] {
     if (seen.has(pairKey)) return;
     seen.add(pairKey);
 
+    const fromJ = jitterCoords(from.id, from.latitude, from.longitude);
+    const toJ = jitterCoords(to.id, to.latitude, to.longitude);
     connections.push({
       id: `${fromId}->${toId}`,
       from: fromId,
       to: toId,
-      fromLat: from.latitude,
-      fromLng: from.longitude,
-      toLat: to.latitude,
-      toLng: to.longitude,
+      fromLat: fromJ.lat,
+      fromLng: fromJ.lng,
+      toLat: toJ.lat,
+      toLng: toJ.lng,
       school: from.school,
     });
   };

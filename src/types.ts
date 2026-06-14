@@ -19,6 +19,9 @@ export interface Thinker {
   influenced: string[];
   coreIdeas: string[];
   hasNotes: boolean;
+  marxConnection?: string;     // 与马克思主义的关联
+  influenceEvidence?: string;  // 影响网络的文献证据
+  influenceNotes?: Record<string, string>;  // 影响关系注释：thinkerId → 传承/批判内容简述
 }
 
 export interface Connection {

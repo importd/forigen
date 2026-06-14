@@ -61,14 +61,28 @@ function AppContent() {
 
   // Filter thinkers by selected era, otherwise by timeline year
   const displayThinkers = useMemo(() => {
-    if (selectedEra) {
-      return allThinkers.filter((t) => {
-        const mid = t.died > 0 ? Math.round((t.born + t.died) / 2) : t.born + 40;
-        return mid >= selectedEra.start && mid <= selectedEra.end;
-      });
+    let base = selectedEra
+      ? allThinkers.filter((t) => {
+          const mid = t.died > 0 ? Math.round((t.born + t.died) / 2) : t.born + 40;
+          return mid >= selectedEra.start && mid <= selectedEra.end;
+        })
+      : filteredThinkers;
+    // When a thinker is selected, always include ALL directly connected thinkers
+    if (selectedThinker) {
+      const relatedIds = new Set<string>();
+      for (const id of selectedThinker.influencedBy) { if (id) relatedIds.add(id); }
+      for (const id of selectedThinker.influenced) { if (id) relatedIds.add(id); }
+      for (const t of allThinkers) {
+        if (t.influencedBy.includes(selectedThinker.id) || t.influenced.includes(selectedThinker.id)) {
+          relatedIds.add(t.id);
+        }
+      }
+      const existingIds = new Set(base.map((t) => t.id));
+      const missing = allThinkers.filter((t) => relatedIds.has(t.id) && !existingIds.has(t.id));
+      if (missing.length > 0) base = [...base, ...missing];
     }
-    return filteredThinkers;
-  }, [allThinkers, filteredThinkers, selectedEra]);
+    return base;
+  }, [allThinkers, filteredThinkers, selectedEra, selectedThinker]);
 
   // When a thinker is selected, only show their connections
   const displayConnections = useMemo(() => {
@@ -78,8 +92,22 @@ function AppContent() {
     );
   }, [connections, selectedThinker]);
 
-  // Compute highlighted thinker IDs from selected topic or school
+  // Compute highlighted thinker IDs from selected topic/school, or selected thinker's relations
   const highlightedIds = useMemo(() => {
+    // Selected thinker: highlight ALL directly connected thinkers
+    if (selectedThinker) {
+      const validIds = new Set(allThinkers.map((t) => t.id));
+      const ids = new Set<string>([selectedThinker.id]);
+      for (const id of selectedThinker.influencedBy) { if (id && validIds.has(id)) ids.add(id); }
+      for (const id of selectedThinker.influenced) { if (id && validIds.has(id)) ids.add(id); }
+      // Also include thinkers who reference the selected thinker
+      for (const t of allThinkers) {
+        if (t.influencedBy.includes(selectedThinker.id) || t.influenced.includes(selectedThinker.id)) {
+          ids.add(t.id);
+        }
+      }
+      return ids;
+    }
     if (!selectedTopic) return undefined;
     // School selection: "school:slug"
     if (selectedTopic.startsWith('school:')) {
@@ -90,7 +118,7 @@ function AppContent() {
     const topic = TOPICS[selectedTopic];
     if (!topic) return undefined;
     return new Set(topic.stances.map((s) => s.thinkerId));
-  }, [selectedTopic, allThinkers]);
+  }, [selectedTopic, allThinkers, selectedThinker]);
 
   const handleSelectThinker = useCallback((thinker: Thinker) => {
     setSelectedThinker(thinker);
@@ -149,8 +177,6 @@ function AppContent() {
         zIndex: 10,
       }}>
         <EraTimeline
-          minYear={minYear}
-          maxYear={maxYear}
           currentYear={timelineYear}
           onSelectEra={handleSelectEra}
           onSelectEraToggle={handleSelectEraToggle}

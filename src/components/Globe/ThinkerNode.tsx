@@ -4,7 +4,7 @@ import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Thinker } from '../../types';
 import { getSchoolColor } from '../../data/schools';
-import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
+import { latLngToVector3, GLOBE_RADIUS, jitterCoords } from '../../utils/geo';
 
 const REF_DISTANCE = 4.0;
 const NODE_MIN = 0.15;
@@ -17,9 +17,10 @@ interface ThinkerNodeProps {
   onClick: (thinker: Thinker) => void;
   highlighted?: boolean;
   dimmed?: boolean;
+  selected?: boolean;
 }
 
-export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighted, dimmed }: ThinkerNodeProps) {
+export function ThinkerNode({ thinker, isDeceased, onClick, highlighted, dimmed, selected }: ThinkerNodeProps) {
   const [hovered, setHovered] = useState(false);
   const groupRef = useRef<THREE.Group>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -30,15 +31,9 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
   const pinHeight = coreRadius * 5;
 
   // Deterministic position jitter — spreads pins at identical coordinates apart in 3D.
-  // Label stays centered on the pin; jitter handles overlap for both.
   const jitteredPosition = useMemo(() => {
-    let hash = 0;
-    const s = `${thinker.id}`;
-    for (let i = 0; i < s.length; i++) hash = ((hash << 5) - hash) + s.charCodeAt(i) | 0;
-    // ±0.15° lat/lng — subtle spread to separate co-located pins
-    const jLat = (hash % 7 - 3) * 0.05;
-    const jLng = ((hash >> 8) % 7 - 3) * 0.05;
-    return latLngToVector3(thinker.latitude + jLat, thinker.longitude + jLng, GLOBE_RADIUS * 1.01);
+    const { lat, lng } = jitterCoords(thinker.id, thinker.latitude, thinker.longitude);
+    return latLngToVector3(lat, lng, GLOBE_RADIUS * 1.01);
   }, [thinker.id, thinker.latitude, thinker.longitude]);
 
   // Quaternion to rotate the local Y axis to align with the surface normal
@@ -65,7 +60,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
 
     if (labelRef.current) {
       labelRef.current.style.transform = `scale(${labelScale})`;
-      labelRef.current.style.display = (highlighted || (!dimmed && (hovered || dist < 2.6))) ? 'block' : 'none';
+      labelRef.current.style.display = (selected || highlighted || (!dimmed && (hovered || dist < 3.2))) ? 'block' : 'none';
     }
   });
 
@@ -73,13 +68,13 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
 
   return (
     <group ref={groupRef} position={jitteredPosition}>
-      {/* --- Subtle glow halo at the pin base --- */}
+      {/* --- Pin base glow — size/opacity reflects state --- */}
       <mesh ref={noRaycast}>
-        <sphereGeometry args={[coreRadius * 2.5, 24, 24]} />
+        <sphereGeometry args={[coreRadius * (selected ? 4 : highlighted ? 3 : 2.5), 24, 24]} />
         <meshBasicMaterial
-          color={color}
+          color={selected ? '#9e2a2b' : color}
           transparent
-          opacity={dimmed ? 0.01 : (highlighted ? 0.35 : (hovered ? 0.25 : 0.12))}
+          opacity={dimmed ? 0.01 : (selected ? 0.55 : (highlighted ? 0.35 : (hovered ? 0.25 : 0.12)))}
           depthWrite={false}
         />
       </mesh>
@@ -128,24 +123,27 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
             ref={labelRef}
             style={{
               fontFamily: "'Georgia', 'Noto Serif SC', serif",
-              color: highlighted ? '#9e2a2b' : color,
-              fontSize: '10px',
+              color: selected ? '#9e2a2b' : (highlighted ? color : '#3a2a1a'),
+              fontSize: selected ? '9px' : '8px',
               fontStyle: 'italic',
               textAlign: 'center',
               whiteSpace: 'nowrap',
-              lineHeight: 1.35,
+              lineHeight: 1.3,
               pointerEvents: 'none',
               display: 'none',
-              backgroundColor: highlighted ? 'rgba(242, 237, 228, 0.9)' : 'transparent',
-              padding: highlighted ? '1px 6px' : '0',
-              borderBottom: highlighted ? '1px solid #9e2a2b' : 'none',
-              borderRadius: highlighted ? '2px' : '0',
+              textShadow: selected
+                ? '0 0 6px rgba(242,237,228,1), 0 0 3px rgba(242,237,228,1), 0 0 1px rgba(242,237,228,1)'
+                : '0 0 5px rgba(242,237,228,0.95), 0 0 2px rgba(242,237,228,0.9), 0 0 1px rgba(242,237,228,0.85)',
+              padding: '0',
+              fontWeight: selected ? 700 : 400,
             }}
           >
-            <div style={{ fontWeight: 'bold', fontSize: '10px' }}>{thinker.name_zh}</div>
-            <div style={{ fontSize: '8px', opacity: 0.75 }}>
-              {thinker.name} · {thinker.born}–{thinker.died}
+            <div style={{ fontWeight: selected ? 700 : 600, fontSize: selected ? '10px' : '9px' }}>{thinker.name_zh}</div>
+            {selected && (
+              <div style={{ fontSize: '7px', opacity: 0.7 }}>
+                {thinker.name} · {thinker.born}–{thinker.died}
             </div>
+            )}
           </div>
         </Html>
       </group>

@@ -10,7 +10,7 @@ region: "china"
 region_label: "中国"
 region_label_en: "China"
 school: "dialectical-synthesis"
-school_label: "辩证综合派"
+school_label: "自成一派"
 school_label_en: "Dialectical Synthesis"
 key_works:
   - title: ""
