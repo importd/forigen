@@ -63,37 +63,6 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
 
   return (
     <group ref={groupRef} position={position}>
-      {/* --- Note indicator: red stamp ring --- */}
-      {hasNotes && (
-        <mesh ref={noRaycast}>
-          <ringGeometry args={[
-            (hovered ? bleedRadius * hiBleedMult * 1.3 : bleedRadius * hiBleedMult * 0.9),
-            (hovered ? bleedRadius * hiBleedMult * 1.6 : bleedRadius * hiBleedMult * 1.1),
-            48
-          ]} />
-          <meshBasicMaterial
-            color="#9e2a2b"
-            transparent
-            opacity={hovered ? 0.70 : 0.28}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-
-      {/* --- Red circle highlight ring (画圈标记) --- */}
-      {highlighted && (
-        <mesh ref={noRaycast}>
-          <torusGeometry args={[bleedRadius * hiBleedMult * 1.2, 0.015, 8, 48]} />
-          <meshBasicMaterial
-            color="#9e2a2b"
-            transparent
-            opacity={0.75}
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-
       {/* --- Ink bleed (largest halo) --- */}
       <mesh ref={noRaycast}>
         <sphereGeometry args={[bleedRadius * hiBleedMult, 32, 32]} />
