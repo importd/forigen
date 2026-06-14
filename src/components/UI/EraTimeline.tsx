@@ -108,11 +108,12 @@ interface EraTimelineProps {
   maxYear: number;
   currentYear: number;
   onSelectEra: (year: number) => void;
-  onHoverEra?: (start: number | null, end: number | null) => void;
+  onSelectEraToggle: (start: number, end: number) => void;
+  selectedEra: { start: number; end: number } | null;
   thinkerCountByEra: Record<number, number>;
 }
 
-export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHoverEra, thinkerCountByEra }: EraTimelineProps) {
+export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onSelectEraToggle, selectedEra, thinkerCountByEra }: EraTimelineProps) {
   const activeEra = useMemo(() => {
     for (const era of ERAS) {
       if (currentYear >= era.start && currentYear <= era.end) return era;
@@ -136,15 +137,19 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
       }}>
         {ERAS.map((era, i) => {
           const isActive = activeEra?.zh === era.zh;
+          const isSelected = selectedEra?.start === era.start && selectedEra?.end === era.end;
           const count = thinkerCountByEra[era.end] || 0;
           return (
             <div
               key={era.zh}
-              onClick={() => onSelectEra(era.end)}
-              title={`${era.zh}（${era.start}–${era.end}）\n${count} 位思想家`}
+              onClick={() => {
+                onSelectEra(era.end);
+                onSelectEraToggle(era.start, era.end);
+              }}
+              title={`${era.zh}（${era.start}–${era.end}）\n${count} 位思想家\n点击筛选 · 再次点击取消`}
               style={{
                 flex: 1,
-                background: isActive ? 'var(--surface-hover)' : 'var(--surface)',
+                background: isSelected ? 'var(--stamp-red-dim)' : isActive ? 'var(--surface-hover)' : 'var(--surface)',
                 borderRight: '1px solid var(--border)',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -153,17 +158,15 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
                 gap: 2,
               }}
               onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)';
-                onHoverEra?.(era.start, era.end);
+                if (!isActive && !isSelected) e.currentTarget.style.background = 'var(--surface-hover)';
               }}
               onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.background = 'var(--surface)';
-                onHoverEra?.(null, null);
+                if (!isActive && !isSelected) e.currentTarget.style.background = 'var(--surface)';
               }}
             >
               <span style={{
-                color: isActive ? 'var(--stamp-red)' : '#4a3a2a',
-                fontWeight: isActive ? 600 : 400,
+                color: (isSelected || isActive) ? 'var(--stamp-red)' : '#4a3a2a',
+                fontWeight: (isSelected || isActive) ? 600 : 400,
                 fontSize: 10,
                 fontFamily: 'var(--font-body)',
               }}>

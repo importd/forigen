@@ -48,26 +48,27 @@ function AppContent() {
     setTimelineYear(endYear);
   }, [setTimelineYear]);
 
-  // Era hover: temporarily show only thinkers from that era
-  const [hoveredEra, setHoveredEra] = useState<{ start: number; end: number } | null>(null);
-  const handleHoverEra = useCallback((start: number | null, end: number | null) => {
-    if (start !== null && end !== null) {
-      setHoveredEra({ start, end });
-    } else {
-      setHoveredEra(null);
-    }
+  // Era select: click to show only that era, click again to deselect
+  const [selectedEra, setSelectedEra] = useState<{ start: number; end: number } | null>(null);
+  const handleSelectEraToggle = useCallback((start: number, end: number) => {
+    setSelectedEra((prev) => {
+      if (prev && prev.start === start && prev.end === end) {
+        return null; // deselect
+      }
+      return { start, end };
+    });
   }, []);
 
-  // Filter thinkers by era when hovering (use mid-career year), otherwise by timeline year
+  // Filter thinkers by selected era, otherwise by timeline year
   const displayThinkers = useMemo(() => {
-    if (hoveredEra) {
+    if (selectedEra) {
       return allThinkers.filter((t) => {
         const mid = t.died > 0 ? Math.round((t.born + t.died) / 2) : t.born + 40;
-        return mid >= hoveredEra.start && mid <= hoveredEra.end;
+        return mid >= selectedEra.start && mid <= selectedEra.end;
       });
     }
     return filteredThinkers;
-  }, [allThinkers, filteredThinkers, hoveredEra]);
+  }, [allThinkers, filteredThinkers, selectedEra]);
 
   // When a thinker is selected, only show their connections
   const displayConnections = useMemo(() => {
@@ -152,7 +153,8 @@ function AppContent() {
           maxYear={maxYear}
           currentYear={timelineYear}
           onSelectEra={handleSelectEra}
-          onHoverEra={handleHoverEra}
+          onSelectEraToggle={handleSelectEraToggle}
+          selectedEra={selectedEra}
           thinkerCountByEra={thinkerCountByEra}
         />
       </div>
