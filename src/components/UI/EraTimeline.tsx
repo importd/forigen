@@ -161,11 +161,6 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onHove
                 onHoverEra?.(null, null);
               }}
             >
-              <div style={{
-                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-                background: isActive ? 'var(--stamp-red)' : 'var(--border)',
-                opacity: isActive ? 1 : 0.5,
-              }} />
               <span style={{
                 color: isActive ? 'var(--stamp-red)' : '#4a3a2a',
                 fontWeight: isActive ? 600 : 400,
