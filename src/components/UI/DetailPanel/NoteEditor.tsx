@@ -62,12 +62,12 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
   // State 1: No content, not editing
   if (!editing && !hasContent) {
     return (
-      <div style={{ padding: '12px 20px 20px', borderTop: '1px solid #1a3a5c' }}>
+      <div style={{ padding: '12px 20px 20px', borderTop: '1px solid var(--border)' }}>
         <button
           onClick={() => setEditing(true)}
           style={{
-            background: 'none', border: '1px dashed #1a3a5c',
-            borderRadius: 6, color: '#556677',
+            background: 'none', border: '1px dashed var(--border)',
+            borderRadius: 6, color: 'var(--text-muted)',
             cursor: 'pointer', fontSize: 11, padding: '8px 14px',
             width: '100%', textAlign: 'left',
           }}
@@ -89,7 +89,7 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
     html = html.replace(/^# (.+)$/gm, '<h2>$1</h2>');
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    html = html.replace(/^- (.+)$/gm, '<li style="margin-left:12px;color:#99aabb;">$1</li>');
+    html = html.replace(/^- (.+)$/gm, '<li style="margin-left:12px;color:var(--text-secondary);">$1</li>');
     html = html.replace(/\n/g, '<br/>');
     return html;
   };
@@ -97,14 +97,14 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
   // State 2: Has content, not editing → show rendered + controls
   if (!editing && hasContent) {
     return (
-      <div style={{ padding: '12px 20px 20px', borderTop: '1px solid #1a3a5c' }}>
+      <div style={{ padding: '12px 20px 20px', borderTop: '1px solid var(--border)' }}>
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           marginBottom: 8,
         }}>
           <SectionLabel zh="📝 笔记" en="Notes" />
           <div style={{ display: 'flex', gap: 6 }}>
-            <span style={{ fontSize: 9, color: '#445566' }}>
+            <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
               {saved ? '✓ 已保存 · Saved' : '... 保存中 · Saving'}
             </span>
           </div>
@@ -114,7 +114,7 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
           <div
             onClick={() => setEditing(true)}
             style={{
-              fontSize: 12, color: '#aaccdd', cursor: 'pointer',
+              fontSize: 12, color: 'var(--text-primary)', cursor: 'pointer',
               padding: '8px 0', lineHeight: 1.6,
             }}
             dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }}
@@ -123,7 +123,7 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
           <div
             onClick={() => setEditing(true)}
             style={{
-              fontSize: 12, color: '#aaccdd', cursor: 'pointer',
+              fontSize: 12, color: 'var(--text-primary)', cursor: 'pointer',
               padding: '8px 0', whiteSpace: 'pre-wrap',
               lineHeight: 1.6,
             }}
@@ -152,19 +152,19 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
 
   // State 3: Editing
   return (
-    <div style={{ padding: '12px 20px 20px', borderTop: '1px solid #1a3a5c' }}>
+    <div style={{ padding: '12px 20px 20px', borderTop: '1px solid var(--border)' }}>
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         marginBottom: 8,
       }}>
         <SectionLabel zh="📝 编辑笔记" en="Editing Notes" />
         <div style={{ display: 'flex', gap: 6 }}>
-          <span style={{ fontSize: 9, color: saved ? '#445566' : '#ffa726' }}>
+          <span style={{ fontSize: 9, color: saved ? 'var(--text-muted)' : '#ffa726' }}>
             {saved ? '✓ 已保存' : '○ 未保存'}
           </span>
           <button onClick={() => { doSave(); setEditing(false); }} style={{
-            background: 'none', border: '1px solid #1a3a5c',
-            borderRadius: 4, color: '#667788', cursor: 'pointer',
+            background: 'none', border: '1px solid var(--border)',
+            borderRadius: 4, color: 'var(--text-secondary)', cursor: 'pointer',
             fontSize: 10, padding: '2px 8px',
           }}>
             完成 · Done
@@ -194,10 +194,10 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
         style={{
           width: '100%',
           minHeight: '140px',
-          background: '#111d2d',
-          border: '1px solid #1a3a5c',
+          background: 'var(--paper)',
+          border: '1px solid var(--border)',
           borderRadius: 6,
-          color: '#aaccdd',
+          color: 'var(--text-primary)',
           fontSize: 12,
           padding: '10px 12px',
           resize: 'vertical',
@@ -212,9 +212,9 @@ export function NoteEditor({ thinkerId }: { thinkerId: string }) {
 
 const smallBtn: React.CSSProperties = {
   background: 'none',
-  border: '1px solid #1a3a5c',
+  border: '1px solid var(--border)',
   borderRadius: 4,
-  color: '#667788',
+  color: 'var(--text-secondary)',
   cursor: 'pointer',
   fontSize: 10,
   padding: '3px 8px',
@@ -226,10 +226,10 @@ function ToolButton({ label, title, onClick }: { label: string; title: string; o
       title={title}
       onClick={(e) => { e.preventDefault(); onClick(); }}
       style={{
-        background: '#111d2d',
-        border: '1px solid #1a3a5c',
+        background: 'var(--paper)',
+        border: '1px solid var(--border)',
         borderRadius: 3,
-        color: '#8899aa',
+        color: 'var(--text-secondary)',
         cursor: 'pointer',
         fontSize: 11,
         padding: '2px 7px',
