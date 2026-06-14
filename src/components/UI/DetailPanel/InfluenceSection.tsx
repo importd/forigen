@@ -8,7 +8,6 @@ interface InfluenceSectionProps {
   onThinkerClick: (id: string) => void;
   customColors: Record<string, string>;
 }
-
 function getRelationType(fromThinker: Thinker, toThinker: Thinker): 'teacher' | 'critical' | 'development' | 'inheritance' {
   // Heuristic: if from and to share a school, likely direct inheritance
   if (fromThinker.school === toThinker.school) return 'inheritance';
@@ -26,10 +25,11 @@ const RELATION_LABELS: Record<string, { zh: string; en: string }> = {
   development: { zh: '影响', en: 'Influence' },
 };
 
-function InfluenceRow({ thinker, color, relation, onThinkerClick }: {
+function InfluenceRow({ thinker, color, relation, note, onThinkerClick }: {
   thinker: Thinker;
   color: string;
   relation: string;
+  note?: string;
   onThinkerClick: (id: string) => void;
 }) {
   const rel = RELATION_LABELS[relation] || RELATION_LABELS.development;
@@ -37,24 +37,36 @@ function InfluenceRow({ thinker, color, relation, onThinkerClick }: {
     <div
       onClick={() => onThinkerClick(thinker.id)}
       style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        fontSize: 12, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 6,
+        cursor: 'pointer',
         padding: '5px 8px', borderRadius: 4,
         transition: 'background 0.15s',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.background = '#1a2a3d')}
+      onMouseEnter={(e) => (e.currentTarget.style.background = '#ddd5c8')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
     >
       <div style={{
-        width: 6, height: 6, borderRadius: '50%',
+        width: 5, height: 5, borderRadius: '50%',
         background: color, flexShrink: 0,
       }} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ color: '#c8d6e0' }}>{thinker.name_zh}</span>
-        <span style={{ color: '#667788', fontSize: 10, marginLeft: 6 }}>{thinker.name}</span>
-      </div>
+      <span style={{ color: 'var(--text-primary)', fontSize: 12, whiteSpace: 'nowrap' }}>{thinker.name_zh}</span>
+      {note && (
+        <span style={{
+          fontSize: 10, color: 'var(--text-muted)',
+          background: 'var(--surface-hover)',
+          border: '1px solid var(--border)',
+          padding: '1px 6px', borderRadius: 8,
+          whiteSpace: 'nowrap',
+          maxWidth: 120,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          {note}
+        </span>
+      )}
+      <span style={{ flex: 1 }} />
       <span style={{
-        fontSize: 9, color: '#445566',
+        fontSize: 9, color: 'var(--text-muted)',
         whiteSpace: 'nowrap',
       }}>
         {rel.zh}
@@ -88,6 +100,7 @@ export function InfluenceSection({ thinker, allThinkers, onThinkerClick, customC
                 thinker={t}
                 color={getColor(t)}
                 relation={getRelationType(t, thinker)}
+                note={thinker.influenceNotes?.[t.id]}
                 onThinkerClick={onThinkerClick}
               />
             ))}
@@ -106,6 +119,7 @@ export function InfluenceSection({ thinker, allThinkers, onThinkerClick, customC
                 thinker={t}
                 color={getColor(t)}
                 relation={getRelationType(thinker, t)}
+                note={thinker.influenceNotes?.[t.id]}
                 onThinkerClick={onThinkerClick}
               />
             ))}
@@ -114,8 +128,20 @@ export function InfluenceSection({ thinker, allThinkers, onThinkerClick, customC
       )}
 
       {influencedBy.length === 0 && influenced.length === 0 && (
-        <div style={{ fontSize: 11, color: '#556677', padding: '4px 0' }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: '4px 0' }}>
           无记录 · No recorded influence relations
+        </div>
+      )}
+
+      {/* Documentary evidence */}
+      {thinker.influenceEvidence && (
+        <div style={{
+          marginTop: 10, fontSize: 10, color: 'var(--text-muted)',
+          lineHeight: 1.5, paddingTop: 8,
+          borderTop: '1px solid var(--border)',
+        }}>
+          <span style={{ marginRight: 4 }}>📖</span>
+          {thinker.influenceEvidence}
         </div>
       )}
     </div>
