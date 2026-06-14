@@ -7,7 +7,7 @@ import { getSchoolColor } from '../../data/schools';
 import { latLngToVector3, GLOBE_RADIUS } from '../../utils/geo';
 
 const REF_DISTANCE = 4.0;
-const NODE_MIN = 0.15;     // tiny dot when zoomed in close
+const NODE_MIN = 0.15;
 const NODE_MAX = 1.8;
 
 interface ThinkerNodeProps {
@@ -25,26 +25,34 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
   const labelRef = useRef<HTMLDivElement>(null);
   const { camera } = useThree();
 
-  const position = latLngToVector3(thinker.latitude, thinker.longitude, GLOBE_RADIUS);
   const color = getSchoolColor(thinker.school);
+  const coreRadius = 0.02 + (thinker.influenced.length * 0.002);
+  const pinHeight = coreRadius * 5;
 
-  const coreRadius = 0.025 + (thinker.influenced.length * 0.003);
-  const pinHeight = coreRadius * 8;
+  // Deterministic position jitter — spreads pins at identical coordinates apart in 3D.
+  // Label stays centered on the pin; jitter handles overlap for both.
+  const jitteredPosition = useMemo(() => {
+    let hash = 0;
+    const s = `${thinker.id}`;
+    for (let i = 0; i < s.length; i++) hash = ((hash << 5) - hash) + s.charCodeAt(i) | 0;
+    // ±0.15° lat/lng — subtle spread to separate co-located pins
+    const jLat = (hash % 7 - 3) * 0.05;
+    const jLng = ((hash >> 8) % 7 - 3) * 0.05;
+    return latLngToVector3(thinker.latitude + jLat, thinker.longitude + jLng, GLOBE_RADIUS * 1.01);
+  }, [thinker.id, thinker.latitude, thinker.longitude]);
 
-  // Quaternion to rotate the local Y axis to align with the surface normal (outward direction)
+  // Quaternion to rotate the local Y axis to align with the surface normal
   const pinQuaternion = useMemo(() => {
-    const normal = position.clone().normalize();
+    const normal = jitteredPosition.clone().normalize();
     const q = new THREE.Quaternion();
     q.setFromUnitVectors(new THREE.Vector3(0, 1, 0), normal);
     return q;
-  }, [position]);
+  }, [jitteredPosition]);
 
   const noRaycast = useCallback((el: any) => {
     if (el) el.raycast = () => {};
   }, []);
 
-  // Distance-based scaling: dot grows when far (stays visible), shrinks when near.
-  // Label inversely scaled — bigger when zoomed in, smaller when zoomed out.
   useFrame(() => {
     if (!groupRef.current) return;
     const worldPos = new THREE.Vector3();
@@ -64,7 +72,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
   const pinHeadY = pinHeight / 2;
 
   return (
-    <group ref={groupRef} position={position}>
+    <group ref={groupRef} position={jitteredPosition}>
       {/* --- Subtle glow halo at the pin base --- */}
       <mesh ref={noRaycast}>
         <sphereGeometry args={[coreRadius * 2.5, 24, 24]} />
@@ -102,7 +110,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
           onPointerOut={() => setHovered(false)}
           position={[0, pinHeadY, 0]}
         >
-          <sphereGeometry args={[coreRadius * 1.5, 16, 16]} />
+          <sphereGeometry args={[coreRadius, 12, 12]} />
           <meshBasicMaterial
             color={color}
             transparent
