@@ -9,8 +9,15 @@ function createSepiaCanvas(): HTMLCanvasElement {
   canvas.height = size / 2;
   const ctx = canvas.getContext('2d')!;
 
-  // Warm parchment base
-  ctx.fillStyle = '#d4b896';
+  // Warm parchment base (ocean)
+  ctx.fillStyle = '#d4c098';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Stronger sepia overlay for land distinction
+  ctx.fillStyle = 'rgba(160, 120, 70, 0.65)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Darker ocean tint to deepen the contrast
+  ctx.fillStyle = 'rgba(190, 160, 120, 0.45)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // Grain / noise overlay
@@ -77,7 +84,7 @@ export function EarthSphere() {
           map={sepiaTexture}
           roughness={1.0}
           metalness={0.0}
-          color={new THREE.Color('#c8b898')}
+          color={new THREE.Color('#d4c098')}
         />
       </mesh>
 
@@ -88,7 +95,7 @@ export function EarthSphere() {
           color="#8b6f4e"
           wireframe
           transparent
-          opacity={0.10}
+          opacity={0.12}
         />
       </mesh>
 
