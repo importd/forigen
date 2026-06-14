@@ -3,13 +3,12 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Connection } from '../../types';
-import { getSchoolColor } from '../../data/schools';
 import { latLngToVector3, midPoint, GLOBE_RADIUS } from '../../utils/geo';
 
 const SEGMENT_COUNT = 12;  // points in the flowing segment
 const SEGMENT_LENGTH = 0.08; // how much of the curve the segment covers (0–1)
-const FADE_NEAR = 2.4;    // camera distance where lines start fading in
-const FADE_FAR = 3.2;     // camera distance where lines are fully transparent
+const FADE_NEAR = 2.8;    // camera distance where lines are fully visible
+const FADE_FAR = 4.0;     // camera distance where lines are fully transparent
 
 interface ConnectionLinesProps {
   connections: Connection[];
@@ -43,7 +42,7 @@ function FlowSegment({ curve, color, zoomRef }: {
 
   useFrame(({ clock }) => {
     if (!lineRef.current) return;
-    const t = ((clock.elapsedTime * 0.15) % 1);
+    const t = ((clock.elapsedTime * 0.35) % 1);
 
     // Sample segment points along the curve
     for (let i = 0; i < SEGMENT_COUNT; i++) {
@@ -55,7 +54,7 @@ function FlowSegment({ curve, color, zoomRef }: {
     }
 
     lineRef.current.geometry.attributes.position.needsUpdate = true;
-    lineRef.current.material.opacity = 0.9 * zoomRef.current;
+    lineRef.current.material.opacity = 0.4 * zoomRef.current;
   });
 
   return (
@@ -84,7 +83,7 @@ function SolidArc({ points, color, zoomRef }: {
 
   useFrame(() => {
     if (lineRef.current) {
-      lineRef.current.material.opacity = 0.3 * zoomRef.current;
+      lineRef.current.material.opacity = 0.25 * zoomRef.current;
     }
   });
 
@@ -93,7 +92,7 @@ function SolidArc({ points, color, zoomRef }: {
       ref={lineRef}
       points={points}
       color={color}
-      lineWidth={0.8}
+      lineWidth={1.3}
       transparent
       opacity={0}
       depthWrite={false}
@@ -115,7 +114,7 @@ export function ConnectionLines({ connections }: ConnectionLinesProps) {
         id: conn.id,
         points,
         curve,
-        color: getSchoolColor(conn.school),
+        color: '#8b7355',
       };
     });
   }, [connections]);
