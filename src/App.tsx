@@ -26,7 +26,7 @@ function AppContent() {
   // Auto-detect year range from thinkers
   const { minYear, maxYear } = useMemo(() => {
     if (allThinkers.length === 0) return { minYear: 1700, maxYear: 2026 };
-    const borns = allThinkers.map((t) => t.born).filter((b) => b > 0);
+    const borns = allThinkers.map((t) => t.born);
     const fullMin = Math.min(...borns);
     return { minYear: fullMin, maxYear: 2026 };
   }, [allThinkers]);

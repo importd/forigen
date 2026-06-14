@@ -138,7 +138,7 @@ export function ThinkerNode({ thinker, isDeceased, onClick, highlighted, dimmed,
               fontWeight: selected ? 700 : 400,
             }}
           >
-            <div style={{ fontWeight: selected ? 700 : 600, fontSize: selected ? '10px' : '9px' }}>{thinker.name_zh}</div>
+            <div style={{ fontWeight: selected ? 700 : 600, fontSize: selected ? '11px' : '10px' }}>{thinker.name_zh}</div>
             {selected && (
               <div style={{ fontSize: '7px', opacity: 0.7 }}>
                 {thinker.name} · {thinker.born}–{thinker.died}
