@@ -81,19 +81,14 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
         </mesh>
       )}
 
-      {/* --- Dark dashed-feel ring for highlighted (selected) state --- */}
+      {/* --- Red circle highlight ring (画圈标记) --- */}
       {highlighted && (
         <mesh ref={noRaycast}>
-          <ringGeometry args={[
-            bleedRadius * hiBleedMult * 1.1,
-            bleedRadius * hiBleedMult * 1.25,
-            64
-          ]} />
+          <torusGeometry args={[bleedRadius * hiBleedMult * 1.2, 0.015, 8, 48]} />
           <meshBasicMaterial
-            color="#1a1a1a"
+            color="#9e2a2b"
             transparent
-            opacity={0.55}
-            side={THREE.DoubleSide}
+            opacity={0.75}
             depthWrite={false}
           />
         </mesh>
@@ -151,7 +146,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
           ref={labelRef}
           style={{
             fontFamily: "'Georgia', 'Noto Serif SC', serif",
-            color: highlighted ? '#9e2a2b' : '#3a2a1a',
+            color: highlighted ? '#9e2a2b' : color,
             fontSize: '10px',
             fontStyle: 'italic',
             textAlign: 'center',
