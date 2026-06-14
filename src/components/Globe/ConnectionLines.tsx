@@ -4,6 +4,7 @@ import { Line } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Connection } from '../../types';
 import { latLngToVector3, midPoint, GLOBE_RADIUS } from '../../utils/geo';
+import { getSchoolColor } from '../../data/schools';
 
 const SEGMENT_COUNT = 12;  // points in the flowing segment
 const SEGMENT_LENGTH = 0.08; // how much of the curve the segment covers (0–1)
@@ -114,19 +115,20 @@ export function ConnectionLines({ connections }: ConnectionLinesProps) {
         id: conn.id,
         points,
         curve,
-        color: '#8b7355',
+        color: '#7a6a54',      // muted brown for solid arc
+        flowColor: getSchoolColor(conn.school), // colored flow shows influence direction
       };
     });
   }, [connections]);
 
   return (
     <group>
-      {arcs.map(({ id, points, curve, color }) => (
+      {arcs.map(({ id, points, curve, color, flowColor }) => (
         <group key={id}>
           {/* Solid dim line — fades with zoom */}
           <SolidArc points={points} color={color} zoomRef={zoomRef} />
           {/* Bright segment sliding along the curve → shows direction, also fades */}
-          <FlowSegment curve={curve} color={color} zoomRef={zoomRef} />
+          <FlowSegment curve={curve} color={flowColor} zoomRef={zoomRef} />
         </group>
       ))}
     </group>
