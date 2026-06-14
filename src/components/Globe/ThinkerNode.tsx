@@ -32,7 +32,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
 
   // Ink-dot layer radii
   const bleedRadius = coreRadius * 3.5;
-  const spreadRadius = coreRadius * 2.2;
+  const spreadRadius = coreRadius * 2.4;
   const inkCoreRadius = coreRadius;
 
   // Highlighted boost
@@ -74,7 +74,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
           <meshBasicMaterial
             color="#9e2a2b"
             transparent
-            opacity={hovered ? 0.55 : 0.22}
+            opacity={hovered ? 0.70 : 0.28}
             side={THREE.DoubleSide}
             depthWrite={false}
           />
@@ -105,7 +105,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={dimmed ? 0.005 : (highlighted ? 0.22 : (hovered ? 0.16 : 0.10))}
+          opacity={dimmed ? 0.005 : (highlighted ? 0.30 : (hovered ? 0.22 : 0.18))}
           depthWrite={false}
         />
       </mesh>
@@ -116,7 +116,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={dimmed ? 0.01 : (highlighted ? 0.35 : (hovered ? 0.26 : 0.18))}
+          opacity={dimmed ? 0.01 : (highlighted ? 0.45 : (hovered ? 0.32 : 0.22))}
           depthWrite={false}
         />
       </mesh>
@@ -137,7 +137,7 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={dimmed ? 0.25 : (highlighted ? 0.85 : (isDeceased ? 0.45 : 0.75))}
+          opacity={dimmed ? 0.35 : (highlighted ? 0.95 : (isDeceased ? 0.70 : 0.95))}
         />
       </mesh>
 
@@ -151,8 +151,8 @@ export function ThinkerNode({ thinker, isDeceased, hasNotes, onClick, highlighte
           ref={labelRef}
           style={{
             fontFamily: "'Georgia', 'Noto Serif SC', serif",
-            color: highlighted ? '#9e2a2b' : '#5a4a3a',
-            fontSize: '9px',
+            color: highlighted ? '#9e2a2b' : '#3a2a1a',
+            fontSize: '10px',
             fontStyle: 'italic',
             textAlign: 'center',
             whiteSpace: 'nowrap',
