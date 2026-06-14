@@ -57,13 +57,14 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
       bottom: 24,
       left: 24,
       zIndex: 15,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontFamily: 'var(--font-mono)',
     }}>
       <span
         onClick={handleExport}
         title="下载所有数据为 Markdown 文件 (.zip)"
         style={{
-          color: '#556677', cursor: 'pointer', fontSize: 11,
+          color: 'var(--text-muted)', cursor: 'pointer', fontSize: 10,
+          letterSpacing: '0.04em',
           marginRight: 12, userSelect: 'none',
         }}
       >
@@ -73,9 +74,9 @@ export function DataToolbar({ thinkers }: DataToolbarProps) {
         onClick={() => !importing && fileInputRef.current?.click()}
         title="上传 .md 或 .zip 文件（新增哲学家 / 恢复笔记）"
         style={{
-          color: importing ? '#334455' : '#556677',
+          color: importing ? 'var(--text-muted)' : 'var(--text-secondary)',
           cursor: importing ? 'default' : 'pointer',
-          fontSize: 11, userSelect: 'none',
+          fontSize: 10, letterSpacing: '0.04em', userSelect: 'none',
         }}
       >
         {importing ? '...' : '⬆ 导入'}
