@@ -149,7 +149,7 @@ export function EraTimeline({ minYear, maxYear, currentYear, onSelectEra, onSele
               title={`${era.zh}（${era.start}–${era.end}）\n${count} 位思想家\n点击筛选 · 再次点击取消`}
               style={{
                 flex: 1,
-                background: isSelected ? 'var(--stamp-red-dim)' : isActive ? 'var(--surface-hover)' : 'var(--surface)',
+                background: isSelected ? '#c4a878' : isActive ? 'var(--surface-hover)' : 'var(--surface)',
                 borderRight: '1px solid var(--border)',
                 cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
